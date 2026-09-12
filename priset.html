@@ -1,0 +1,3818 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>PRO Visual Editor</title>
+<style>
+:root{
+  --bg:#080a0f; --panel:#11151d; --panel2:#181d27; --panel3:#202733;
+  --bd:rgba(255,255,255,.08); --bd2:rgba(255,255,255,.15);
+  --text:#edf3ff; --muted:#8b96a8; --dim:#5d6878;
+  --ac:#3b9eff; --ac2:#7c5cff; --ok:#34d399; --warn:#f59e0b; --danger:#ff496c;
+  --sh:0 20px 70px rgba(0,0,0,.55);
+  --st:env(safe-area-inset-top,0px); --sb:env(safe-area-inset-bottom,0px);
+}
+[data-theme=light]{
+  --bg:#eef1f6; --panel:#fff; --panel2:#f5f7fa; --panel3:#e9edf3;
+  --bd:rgba(0,0,0,.09); --bd2:rgba(0,0,0,.18);
+  --text:#151a22; --muted:#687386; --dim:#9aa0ad;
+  --ac:#2563eb; --ac2:#6848e8; --ok:#059669; --warn:#d97706; --danger:#e11d48;
+  --sh:0 20px 60px rgba(0,0,0,.15);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;
+  font-family:Inter,system-ui,-apple-system,'Vazirmatn',sans-serif;
+  background:var(--bg);color:var(--text);font-size:14px}
+button,input,select,textarea{font-family:inherit;-webkit-appearance:none}
+button{cursor:pointer;border:0;background:none;color:inherit}
+
+.app{position:fixed;inset:0;display:grid;grid-template-columns:64px 1fr 400px;
+  background:var(--bg);padding:0 var(--st)}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+
+/* نوار چپ */
+.lb{border-inline-end:1px solid var(--bd);background:var(--panel);display:flex;
+  flex-direction:column;align-items:center;padding:12px 6px;gap:6px;z-index:50;overflow-y:auto}
+.lb::-webkit-scrollbar{display:none}
+.logo{width:42px;height:42px;border-radius:13px;display:grid;place-items:center;
+  margin-bottom:8px;background:linear-gradient(135deg,var(--ac),var(--ac2));
+  color:#fff;font-weight:900;font-size:17px;
+  box-shadow:0 0 20px rgba(59,158,255,.3);flex-shrink:0}
+.sb{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;
+  color:var(--muted);font-size:19px;transition:.15s;flex-shrink:0;border:1px solid transparent}
+.sb:active{background:var(--panel3);color:var(--ac)}
+.sb.on{background:var(--panel3);color:var(--ac);border-color:var(--ac)}
+@media(max-width:900px){.lb{display:none}}
+
+/* محل کار */
+.ws{position:relative;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(circle at 50% 20%,rgba(59,158,255,.07),transparent 35%),var(--bg)}
+.tb{flex-shrink:0;height:54px;padding:8px 10px;display:flex;align-items:center;
+  gap:6px;background:var(--panel);border-bottom:1px solid var(--bd);overflow-x:auto}
+.tb::-webkit-scrollbar{display:none}
+.brand{font-size:12px;font-weight:800;letter-spacing:.5px;color:var(--ac);
+  white-space:nowrap;margin-inline-end:4px}
+.sp{flex:1;min-width:4px}
+.btn{height:36px;padding:0 12px;border-radius:9px;border:1px solid var(--bd);
+  background:var(--panel2);color:var(--text);font-size:12px;font-weight:700;
+  display:inline-flex;align-items:center;gap:4px;transition:.15s;white-space:nowrap;flex-shrink:0}
+.btn:active{background:var(--panel3);transform:scale(.96)}
+.btn.pri{background:linear-gradient(135deg,var(--ac),var(--ac2));border:0;color:#fff}
+.btn.on{background:var(--panel3);color:var(--ac);border-color:var(--ac)}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn.ic{width:36px;padding:0;justify-content:center;font-size:15px}
+
+/* نوار صفحات */
+.pb{flex-shrink:0;height:38px;padding:4px 8px;display:none;gap:5px;overflow-x:auto;
+  background:var(--panel2);border-bottom:1px solid var(--bd);align-items:center}
+.pb::-webkit-scrollbar{display:none}
+.pb.show{display:flex}
+.pt{padding:5px 10px;border-radius:7px;background:var(--panel);border:1px solid var(--bd);
+  color:var(--muted);font-size:11.5px;font-weight:600;display:inline-flex;gap:5px;
+  align-items:center;white-space:nowrap;flex-shrink:0}
+.pt.on{background:rgba(59,158,255,.15);color:var(--ac);border-color:var(--ac)}
+.pt .x{opacity:.6;font-size:10px;padding:0 2px}
+.pt .x:active{color:var(--danger);opacity:1}
+.padd{padding:5px 9px;border-radius:7px;background:transparent;
+  border:1px dashed var(--bd2);color:var(--muted);font-size:13px;flex-shrink:0}
+
+/* پیش‌نمایش */
+.pw{flex:1;position:relative;overflow:hidden;background:#fff}
+#pv{width:100%;height:100%;border:0;display:block;background:#fff;touch-action:manipulation}
+#pv *{touch-action:manipulation}
+.empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:12px;color:var(--muted);background:var(--bg);
+  text-align:center;padding:20px}
+.empty .ic{font-size:44px;opacity:.7}
+.empty h2{font-size:17px;color:var(--text);font-weight:700}
+.empty p{font-size:12.5px;line-height:1.9;max-width:340px}
+.empty .cta{margin-top:8px;padding:12px 24px;border-radius:12px;
+  background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;font-weight:700;font-size:14px}
+
+/* Big Mode */
+.big{position:absolute;inset:0;display:none;overflow-y:auto;
+  background:var(--bg);padding:16px}
+.big.show{display:block}
+.big .card{background:var(--panel);border:1px solid var(--bd);border-radius:14px;
+  padding:16px;margin-bottom:12px}
+.big h3{margin:0 0 10px;font-size:14px;color:var(--ac)}
+.big .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.big .stat{background:var(--panel2);border-radius:10px;padding:10px}
+.big .stat .n{font-size:18px;font-weight:800;color:var(--ac);
+  font-family:ui-monospace,monospace}
+.big .stat .l{font-size:10.5px;color:var(--dim);margin-top:2px}
+.big .row{display:flex;gap:8px;margin-bottom:8px}
+.big .row button{flex:1;padding:11px;border-radius:10px;border:1px solid var(--bd);
+  background:var(--panel2);color:var(--text);font-size:12.5px;font-weight:700}
+.big .row button.pri{background:linear-gradient(135deg,var(--ac),var(--ac2));
+  border:0;color:#fff}
+
+.mpill{position:absolute;top:14px;left:50%;transform:translateX(-50%);
+  padding:6px 14px;border-radius:999px;background:rgba(59,158,255,.95);
+  color:#fff;font-size:12px;font-weight:700;z-index:90;
+  box-shadow:0 6px 24px rgba(59,158,255,.4);display:none;pointer-events:none;
+  white-space:nowrap}
+.mpill.on{display:block}
+
+/* پنل ویرایشگر */
+.ed{background:var(--panel);border-inline-end:1px solid var(--bd);
+  display:flex;flex-direction:column;overflow:hidden;z-index:60}
+.edh{flex-shrink:0;padding:12px 14px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px}
+.edt{font-size:12.5px;font-weight:800;flex:1}
+.tag{font-family:ui-monospace,monospace;color:var(--ac);background:var(--panel3);
+  padding:4px 8px;border-radius:6px;font-size:10.5px}
+.tag.empty{background:transparent;color:var(--dim);border:none;padding:0}
+.xb{width:32px;height:32px;border-radius:50%;background:var(--panel3);
+  color:var(--muted);font-size:16px;display:grid;place-items:center;flex-shrink:0}
+.xb:active{background:var(--bd2);color:var(--danger)}
+.etabs{display:flex;border-bottom:1px solid var(--bd);padding:0 6px;
+  flex-shrink:0;overflow-x:auto}
+.etabs::-webkit-scrollbar{display:none}
+.etab{flex:1;padding:10px 8px;font-size:11.5px;font-weight:700;color:var(--dim);
+  border-bottom:2px solid transparent;white-space:nowrap;transition:.15s}
+.etab.on{color:var(--ac);border-color:var(--ac)}
+.eb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px}
+.ep{display:none}.ep.on{display:block}
+
+/* کنترل‌ها */
+.grp{background:var(--panel2);border:1px solid var(--bd);border-radius:12px;
+  padding:12px;margin-bottom:10px}
+.grp h4{font-size:10.5px;color:var(--ac);font-weight:900;text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:10px;display:flex;justify-content:space-between}
+.grp h4 .v{color:var(--ok);font-weight:400;font-family:ui-monospace,monospace;
+  text-transform:none}
+.ctl{display:grid;grid-template-columns:72px 1fr;gap:8px;align-items:center;margin-bottom:8px}
+.ctl:last-child{margin-bottom:0}
+.ctl label{font-size:10.5px;color:var(--muted);font-weight:600}
+.ctl input,.ctl select,.ctl textarea{width:100%;height:34px;border-radius:8px;
+  border:1px solid var(--bd);background:var(--panel3);color:var(--text);outline:none;
+  padding:0 9px;font-size:12px;transition:.15s}
+.ctl textarea{height:auto;padding:9px;min-height:70px;line-height:1.6;
+  font-family:ui-monospace,monospace;font-size:11.5px;resize:vertical}
+.ctl input:focus,.ctl select:focus,.ctl textarea:focus{border-color:var(--ac);
+  box-shadow:0 0 0 2px rgba(59,158,255,.15)}
+.ctl input[type=range]{padding:0;accent-color:var(--ac);height:34px}
+.ctl input[type=color]{padding:3px;cursor:pointer;height:34px}
+.ctl .path{font-family:ui-monospace,monospace;font-size:10.5px;color:var(--ac);
+  background:var(--panel3);padding:8px 10px;border-radius:7px;word-break:break-all;
+  line-height:1.5;grid-column:1/-1}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.seg{display:flex;gap:3px;background:var(--panel3);padding:3px;
+  border-radius:9px;margin-bottom:8px}
+.seg button{flex:1;padding:7px 6px;border-radius:7px;color:var(--muted);
+  font-size:11px;font-weight:700}
+.seg button.on{background:var(--ac);color:#fff}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.chip{padding:6px 11px;border-radius:999px;background:var(--panel3);
+  border:1px solid var(--bd);color:var(--muted);font-size:11px;font-weight:600}
+.chip:active,.chip.on{background:rgba(59,158,255,.2);color:var(--ac);border-color:var(--ac)}
+.preview{width:100%;max-height:150px;object-fit:contain;background:var(--panel3);
+  border-radius:9px;border:1px solid var(--bd);margin-bottom:6px}
+.acts{display:flex;gap:6px;margin-top:12px}
+.acts button{flex:1;padding:11px;border-radius:9px;border:1px solid var(--bd);
+  background:var(--panel2);color:var(--text);font-size:12.5px;font-weight:700}
+.acts button.pri{background:linear-gradient(135deg,var(--ac),var(--ac2));
+  border:0;color:#fff}
+.acts button.danger{color:var(--danger)}
+.acts button.blue{background:rgba(59,158,255,.15);color:#93c5fd;border-color:var(--ac)}
+.noSel{padding:40px 20px;text-align:center;color:var(--dim);
+  font-size:13px;line-height:1.9}
+.noSel .ic{font-size:40px;margin-bottom:10px;display:block;opacity:.5}
+.hint{font-size:11px;color:var(--dim);line-height:1.7;margin:8px 0 0;padding:10px;
+  background:var(--panel3);border-radius:8px}
+
+/* تب‌بار موبایل */
+.tbar{display:none;background:var(--panel);border-top:1px solid var(--bd);
+  padding-bottom:var(--sb);flex-shrink:0;overflow-x:auto;
+  position:fixed;bottom:0;left:0;right:0;z-index:80}
+.tbar::-webkit-scrollbar{display:none}
+.tbar button{flex:1;min-width:60px;padding:8px 2px 6px;display:flex;
+  flex-direction:column;align-items:center;gap:2px;color:var(--muted);
+  font-size:9.5px;font-weight:600;position:relative}
+.tbar button .ico{font-size:20px;line-height:1}
+.tbar button .badge{position:absolute;top:4px;right:calc(50% - 18px);
+  background:var(--ac);color:#fff;font-size:9px;font-weight:800;padding:1px 5px;
+  border-radius:8px;min-width:16px;text-align:center}
+.tbar button.on{color:var(--ac)}
+@media(max-width:900px){
+  .tbar{display:flex}
+  .ed{position:fixed;top:0;bottom:56px;right:0;width:min(420px,94vw);
+    transform:translateX(100%);transition:.28s cubic-bezier(.32,.72,0,1);
+    box-shadow:-20px 0 60px rgba(0,0,0,.4)}
+  .ed.open{transform:translateX(0)}
+}
+
+/* شیت‌ها */
+.bd{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:.25s;z-index:100}
+.bd.on{opacity:1;pointer-events:auto}
+.sh{position:fixed;left:0;right:0;bottom:0;background:var(--panel);
+  border-top-left-radius:20px;border-top-right-radius:20px;border-top:1px solid var(--bd);
+  transform:translateY(100%);transition:.3s cubic-bezier(.32,.72,0,1);
+  max-height:88vh;display:flex;flex-direction:column;z-index:101;
+  padding-bottom:var(--sb);box-shadow:0 -20px 60px rgba(0,0,0,.4)}
+.sh.on{transform:translateY(0)}
+.sh.tall{height:88vh}
+.shh{width:36px;height:4px;background:var(--bd2);border-radius:2px;
+  margin:8px auto 4px;flex-shrink:0}
+.shhd{padding:6px 16px 12px;border-bottom:1px solid var(--bd);
+  display:flex;align-items:center;gap:10px}
+.shhd h3{font-size:14.5px;font-weight:800;flex:1}
+.shhd .c{font-size:11.5px;color:var(--dim);font-family:ui-monospace,monospace}
+.shb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:8px}
+.li{padding:12px 14px;background:var(--panel2);border:1px solid transparent;
+  border-radius:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;
+  min-height:52px;transition:.15s}
+.li:active{background:var(--panel3);transform:scale(.99)}
+.li.on{background:rgba(59,158,255,.12);border-color:var(--ac)}
+.li .tg{font-size:9.5px;font-weight:800;padding:3px 7px;background:var(--panel3);
+  color:var(--dim);border-radius:5px;text-transform:uppercase;flex-shrink:0}
+.li.on .tg{background:var(--ac);color:#fff}
+.li .tx{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap}
+.li .th{width:44px;height:44px;border-radius:8px;object-fit:cover;
+  background:var(--panel3);flex-shrink:0}
+.li .dot{color:var(--ac);font-size:12px}
+.cgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));
+  gap:6px;padding:4px}
+.cc{aspect-ratio:1;border-radius:10px;border:1px solid var(--bd2);
+  position:relative;display:flex;align-items:flex-end;justify-content:center;
+  padding-bottom:5px;overflow:hidden;font-size:8px}
+.cc .h{font-family:ui-monospace,monospace;font-weight:700;padding:1px 4px;
+  border-radius:3px;background:rgba(0,0,0,.6);color:#fff}
+
+.toast{position:fixed;bottom:calc(76px + var(--sb));left:50%;
+  transform:translateX(-50%) translateY(20px);padding:10px 18px;
+  border-radius:999px;background:var(--panel3);color:var(--text);
+  border:1px solid var(--ac);font-size:12.5px;font-weight:600;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);opacity:0;pointer-events:none;
+  transition:.25s;z-index:400;max-width:90vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.ldr{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);display:none;align-items:center;
+  justify-content:center;flex-direction:column;gap:14px;z-index:500}
+.ldr.on{display:flex}
+.spin{width:40px;height:40px;border:3px solid rgba(255,255,255,.15);
+  border-top-color:var(--ac);border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ldr .t{font-size:13.5px;color:var(--muted);text-align:center;max-width:80%}
+.ldr .bar{width:220px;height:3px;background:rgba(255,255,255,.1);
+  border-radius:2px;overflow:hidden}
+.ldr .bar>i{display:block;height:100%;width:0;background:var(--ac);
+  transition:width .2s}
+.ifi{position:absolute;width:1px;height:1px;opacity:.01;pointer-events:none}
+
+[contenteditable="true"]{
+  outline:2px dashed #3b9eff !important;
+  outline-offset:2px;
+  -webkit-user-select:text !important;
+  user-select:text !important;
+  cursor:text !important;
+}
+
+/* Sections Manager */
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:8px;padding:4px}
+.sec-card{background:var(--panel2);border:1px solid var(--bd);border-radius:10px;
+  padding:10px;display:flex;flex-direction:column;gap:8px;cursor:pointer;
+  transition:.15s;position:relative}
+.sec-card:active{background:var(--panel3);transform:scale(.98)}
+.sec-card .thumb{width:100%;height:70px;background:var(--panel3);border-radius:6px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;
+  font-size:24px;opacity:.6}
+.sec-card .name{font-size:11.5px;font-weight:700;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap;padding-inline-end:20px}
+.sec-card .menu-btn{position:absolute;top:6px;left:6px;width:22px;height:22px;
+  border-radius:50%;background:rgba(0,0,0,.5);color:#fff;font-size:11px;
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:.15s}
+.sec-card:hover .menu-btn,.sec-card:active .menu-btn{opacity:1}
+.sec-actions{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.sec-actions button{flex:1;min-width:100px;padding:10px;border-radius:9px;
+  border:1px solid var(--bd);background:var(--panel2);color:var(--text);
+  font-size:12px;font-weight:700;display:inline-flex;align-items:center;
+  justify-content:center;gap:4px}
+.sec-actions button.pri{background:linear-gradient(135deg,var(--ac),var(--ac2));
+  border:0;color:#fff}
+.sec-search{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--bd);
+  background:var(--panel3);color:var(--text);font-size:13px;outline:none;
+  margin-bottom:10px}
+.sec-search:focus{border-color:var(--ac);box-shadow:0 0 0 2px rgba(59,158,255,.15)}
+.sec-tabs{display:flex;gap:4px;margin-bottom:10px}
+.sec-tabs button{flex:1;padding:8px;border-radius:8px;border:1px solid var(--bd);
+  background:var(--panel2);color:var(--muted);font-size:11.5px;font-weight:700}
+.sec-tabs button.on{background:var(--panel3);color:var(--ac);border-color:var(--ac)}
+.sec-menu{position:fixed;background:var(--panel);border:1px solid var(--bd2);
+  border-radius:10px;padding:5px;min-width:150px;z-index:300;
+  box-shadow:0 12px 40px rgba(0,0,0,.5)}
+.sec-menu button{display:block;width:100%;text-align:right;padding:9px 12px;
+  border-radius:7px;color:var(--text);font-size:12.5px;font-weight:600}
+.sec-menu button:hover{background:var(--panel3)}
+.sec-menu button.danger{color:var(--danger)}
+.sec-menu button.blue{color:#93c5fd}
+#secEditSh textarea{width:100%;min-height:280px;background:#090c11;
+  color:#d9e7ff;border:1px solid var(--bd);border-radius:10px;padding:12px;
+  font:11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;
+  outline:none;resize:vertical;direction:ltr;text-align:left}
+#secEditSh textarea:focus{border-color:var(--ac);
+  box-shadow:0 0 0 2px rgba(59,158,255,.15)}
+#secEditSh input[type=text]{width:100%;padding:10px 12px;border-radius:9px;
+  border:1px solid var(--bd);background:var(--panel3);color:var(--text);
+  font-size:13.5px;outline:none}
+#secEditSh input[type=text]:focus{border-color:var(--ac)}
+
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--panel3);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+<aside class="lb">
+  <div class="logo">P</div>
+  <button class="sb on" data-tool="select" title="ویرایش">🎯</button>
+  <button class="sb" data-tool="texts" title="متن‌ها">📝</button>
+  <button class="sb" data-tool="images" title="تصاویر">🖼</button>
+  <button class="sb" data-tool="colors" title="رنگ‌ها">🎨</button>
+  <button class="sb" data-tool="pages" title="صفحات">📄</button>
+  <button class="sb" data-tool="elements" title="المان‌ها">📋</button>
+  <button class="sb" data-tool="sections" title="سکشن‌ها">➕</button>
+  <button class="sb" data-tool="export" title="خروجی">⬇</button>
+</aside>
+
+<main class="ws">
+  <header class="tb">
+    <div class="brand">PRO EDITOR</div>
+    <div class="sp"></div>
+    <button class="btn ic" id="btnUndo" title="واگرد (Ctrl+Z)" disabled>↶</button>
+    <button class="btn ic" id="btnRedo" title="ازنو (Ctrl+Shift+Z)" disabled>↷</button>
+    <button class="btn ic" id="btnTheme" title="تم">◐</button>
+    <button class="btn ic" id="btnDrag" title="درگ">✋</button>
+    <button class="btn ic" id="btnInteract" title="تعامل">👆</button>
+    <button class="btn ic" id="btnIntro" title="اینترو">🎬</button>
+    <button class="btn pri" id="btnImport">＋ ایمپورت</button>
+    <button class="btn" id="btnAddSection" title="افزودن سکشن">➕ سکشن</button>
+    <button class="btn" id="btnExport">⬇ خروجی</button>
+    <button class="btn ic" id="btnMenu">⋯</button>
+  </header>
+
+  <div class="pb" id="pagebar"></div>
+
+  <div class="pw">
+    <iframe id="pv" sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-modals allow-downloads allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
+    <div class="mpill" id="mpill">👆 حالت تعامل</div>
+
+    <div class="big" id="bigMode">
+      <div class="card">
+        <h3>📊 خلاصه</h3>
+        <div class="stats" id="bigStats"></div>
+        <div class="row">
+          <button class="pri" id="bigTxt">📝 استخراج متن</button>
+          <button id="bigCol">🎨 رنگ‌ها</button>
+        </div>
+        <div class="row">
+          <button id="bigImg">🖼 تصاویر</button>
+          <button id="bigForce">⚠️ رندر اجباری</button>
+        </div>
+      </div>
+      <div class="card">
+        <h3>ℹ️ حالت فوق‌سنگین</h3>
+        <p style="font-size:12.5px;color:var(--muted);line-height:1.8">
+          سایت‌های SPA مثل Canva حجم DOM بالایی دارن. توی این حالت،
+          متن/رنگ/تصویر بدون رندر استخراج می‌شه.
+        </p>
+      </div>
+    </div>
+
+    <div class="empty" id="empty">
+      <span class="ic">📱</span>
+      <h2>شروع کن</h2>
+      <p>HTML، CSS، JS یا ZIP سایتت رو بده. متن، عکس، رنگ، گرادینت، هاله، پارالاکس، درگ، کپی، چند صفحه و پریست سکشن.</p>
+      <button class="cta" id="btnEmptyImport">＋ افزودن فایل‌ها</button>
+    </div>
+  </div>
+</main>
+
+<aside class="ed" id="editor">
+  <div class="edh">
+    <div class="edt">ویرایشگر المان</div>
+    <span class="tag empty" id="elTag">—</span>
+    <button class="xb" id="closeEditor">×</button>
+  </div>
+  <nav class="etabs">
+    <button class="etab on" data-etab="content">محتوا</button>
+    <button class="etab" data-etab="style">استایل</button>
+    <button class="etab" data-etab="effects">افکت</button>
+    <button class="etab" data-etab="layer">لایه</button>
+  </nav>
+  <div class="eb" id="eb">
+    <div class="ep on" id="epContent"></div>
+    <div class="ep" id="epStyle"></div>
+    <div class="ep" id="epEffects"></div>
+    <div class="ep" id="epLayer"></div>
+  </div>
+</aside>
+
+</div>
+
+<nav class="tbar" id="tabbar">
+  <button data-tab="editor" class="on"><span class="ico">🎯</span>المان</button>
+  <button data-tab="texts"><span class="ico">📝</span>متن‌ها<span class="badge" id="bTxt" style="display:none">0</span></button>
+  <button data-tab="images"><span class="ico">🖼</span>تصاویر<span class="badge" id="bImg" style="display:none">0</span></button>
+  <button data-tab="colors"><span class="ico">🎨</span>رنگ‌ها<span class="badge" id="bCol" style="display:none">0</span></button>
+  <button data-tab="pages"><span class="ico">📄</span>صفحات<span class="badge" id="bPg" style="display:none">0</span></button>
+  <button data-tab="elements"><span class="ico">📋</span>لیست<span class="badge" id="bEl" style="display:none">0</span></button>
+  <button data-tab="sections"><span class="ico">➕</span>سکشن</button>
+  <button data-tab="export"><span class="ico">⬇</span>خروجی</button>
+</nav>
+
+<div class="bd" id="bd"></div>
+
+<div class="sh tall" id="listSh">
+  <div class="shh"></div>
+  <div class="shhd">
+    <h3 id="listTitle">لیست</h3>
+    <span class="c" id="listCount">0</span>
+    <button class="xb" id="listClose">×</button>
+  </div>
+  <div class="shb" id="listBody"></div>
+</div>
+
+<div class="sh" id="menuSh">
+  <div class="shh"></div>
+  <div class="shhd">
+    <h3>عملیات</h3>
+    <button class="xb" id="menuClose">×</button>
+  </div>
+  <div class="shb" id="menuBody"></div>
+</div>
+
+<div class="sh tall" id="secEditSh">
+  <div class="shh"></div>
+  <div class="shhd">
+    <h3>✏️ ویرایش پریست</h3>
+    <button class="xb" id="secEditClose">×</button>
+  </div>
+  <div class="shb" style="padding:14px">
+    <div class="grp" style="background:transparent;border:0;padding:0">
+      <h4 style="font-size:10.5px;color:var(--ac);font-weight:900;
+        text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">نام پریست</h4>
+      <input type="text" id="secEditName" placeholder="نام پریست...">
+    </div>
+    <div class="grp" style="background:transparent;border:0;padding:0;margin-top:14px">
+      <h4 style="font-size:10.5px;color:var(--ac);font-weight:900;
+        text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px">HTML</h4>
+      <textarea id="secEditHtml" spellcheck="false" placeholder="<section>...</section>"></textarea>
+    </div>
+    <div class="acts" style="margin-top:14px">
+      <button class="pri" id="secEditSave">✓ ذخیره</button>
+      <button id="secEditCancel">انصراف</button>
+    </div>
+  </div>
+</div>
+
+<div class="ldr" id="loader">
+  <div class="spin"></div>
+  <div class="t" id="lText">...</div>
+  <div class="bar"><i id="lBar"></i></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<input type="file" id="fileInput" class="ifi" multiple
+  accept=".html,.htm,.css,.js,.mjs,.json,.zip,text/html,text/css,text/javascript,application/json,text/plain,application/zip,application/octet-stream">
+<input type="file" id="jsonInput" class="ifi" accept=".json,application/json">
+<input type="file" id="mediaInput" class="ifi" accept="image/*,video/*">
+<input type="file" id="sectionFileInput" class="ifi" accept=".html,.htm,text/html" multiple>
+<input type="file" id="sectionFolderInput" class="ifi" webkitdirectory directory multiple>
+<input type="file" id="sectionJsonInput" class="ifi" accept=".json,application/json">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" crossorigin="anonymous"></script>
+
+<script>
+(() => {
+'use strict';
+
+/* ============================================================
+   ۱. Utils
+============================================================ */
+const Utils = {
+  BIG_LIMIT: 1.5 * 1024 * 1024,
+  HARD_LIMIT: 25 * 1024 * 1024,
+  SKIP: new Set(['SCRIPT','STYLE','NOSCRIPT','CODE','PRE','SVG','TEXTAREA','INPUT','SELECT','IFRAME','TEMPLATE','CANVAS']),
+  LIBS: [
+    {p:/^three(\.module|\.min)?\.js$/i, u:'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js'},
+    {p:/^gsap(\.min)?\.js$/i, u:'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js'},
+    {p:/^jquery(-[\d.]+)?(\.min)?\.js$/i, u:'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js'},
+    {p:/^bootstrap(\.bundle)?(\.min)?\.js$/i, u:'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js'},
+  ],
+  $: s => document.querySelector(s),
+  $$: s => [...document.querySelectorAll(s)],
+  esc(s){
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  },
+  fmt(n){
+    return n < 1024 ? n + ' B' :
+           n < 1048576 ? (n/1024).toFixed(1) + ' KB' :
+           (n/1048576).toFixed(2) + ' MB';
+  },
+  yieldUI(){ return new Promise(r => setTimeout(r, 0)); },
+  hex(c){
+    c = c.trim().toLowerCase();
+    if(/^#[0-9a-f]{3}$/.test(c)) return '#' + c.slice(1).split('').map(x=>x+x).join('');
+    if(/^#[0-9a-f]{6}$/.test(c)) return c;
+    return null;
+  },
+  rgb(s){
+    const m = s.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if(!m) return null;
+    return '#' + [m[1],m[2],m[3]].map(n => (+n).toString(16).padStart(2,'0')).join('');
+  },
+  cssColor(str, from, to){
+    const h = from.slice(1);
+    const r = parseInt(h.slice(0,2),16);
+    const g = parseInt(h.slice(2,4),16);
+    const b = parseInt(h.slice(4,6),16);
+    const pats = [
+      new RegExp(from.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'),
+      new RegExp(`rgba?\\(\\s*${r}\\s*,\\s*${g}\\s*,\\s*${b}\\s*(?:,\\s*[^)]+)?\\)`, 'gi'),
+    ];
+    let o = str;
+    for(const p of pats) o = o.replace(p, to);
+    return o;
+  },
+  cdnFor(n){ return (this.LIBS.find(l => l.p.test(n)) || {}).u || null; }
+};
+
+/* ============================================================
+   ۲. State
+============================================================ */
+const State = {
+  pages: [],
+  idx: 0,
+  iframeDoc: null,
+  texts: [], images: [], colors: [], elements: [],
+  sel: { kind: null, id: null },
+  runJs: false, autoIntro: true, big: false,
+  drag: false, interact: false, dragMoved: false,
+  clip: null, blobs: [], jszip: !!window.JSZip,
+  sheet: null, sheetType: null,
+
+  newPage(name){
+    return {
+      id: 'p' + Date.now() + Math.random().toString(36).slice(2,5),
+      name: name || 'صفحه',
+      html: null, css: [], js: [],
+      edits: {
+        texts: new Map(),
+        images: new Map(),
+        colors: new Map(),
+        positions: new Map(),
+        backgrounds: new Map(),
+        glows: new Map(),
+        parallax: new Map(),
+      },
+    };
+  },
+  P(){ return this.pages[this.idx]; },
+  init(){
+    this.pages = [this.newPage('خانه')];
+    this.idx = 0;
+  }
+};
+State.init();
+
+/* ============================================================
+   ۳. UI
+============================================================ */
+const UI = {
+  toastT: null,
+  toast(m, ms=2400){
+    const t = Utils.$('#toast');
+    t.textContent = m;
+    t.classList.add('on');
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => t.classList.remove('on'), ms);
+  },
+  showL(t, p){
+    Utils.$('#lText').textContent = t || '...';
+    Utils.$('#lBar').style.width = (p ?? 0) + '%';
+    Utils.$('#loader').classList.add('on');
+  },
+  hideL(){
+    Utils.$('#loader').classList.remove('on');
+    Utils.$('#lBar').style.width = '0%';
+  },
+  updateBadges(){
+    const B = (id, n) => {
+      const el = Utils.$('#' + id);
+      if(!el) return;
+      if(n > 0){ el.textContent = n > 999 ? '999+' : n; el.style.display = ''; }
+      else el.style.display = 'none';
+    };
+    B('bTxt', State.texts.length);
+    B('bImg', State.images.length);
+    B('bCol', State.colors.length);
+    B('bPg', State.pages.length);
+    B('bEl', State.elements.length);
+  },
+  updateStatus(){
+    const total = (State.P().html?.size || 0) +
+      State.P().css.reduce((s,f) => s + f.size, 0) +
+      State.P().js.reduce((s,f) => s + f.size, 0);
+    document.title = `PRO Editor — ${State.P().name}${State.big ? ' 🚀' : ''} — ${Utils.fmt(total)}`;
+  },
+  updateUI(){
+    const has = !!State.P().html;
+    if(has){
+      Utils.$('#empty').style.display = 'none';
+      Utils.$('#pv').style.display = 'block';
+    } else {
+      Utils.$('#empty').style.display = 'flex';
+    }
+    this.updateBadges();
+    this.updateStatus();
+  }
+};
+
+/* ============================================================
+   ۴. History
+============================================================ */
+const History = {
+  list: [],
+  idx: -1,
+  busy: false,
+  max: 30,
+  pending: null,
+
+  snap(){
+    if(!State.iframeDoc || State.big || !State.iframeDoc.body) return null;
+    return {
+      body: State.iframeDoc.body.innerHTML,
+      edits: {
+        texts: [...State.P().edits.texts],
+        images: [...State.P().edits.images],
+        colors: [...State.P().edits.colors],
+        positions: [...State.P().edits.positions],
+        backgrounds: [...State.P().edits.backgrounds],
+        glows: [...State.P().edits.glows],
+        parallax: [...State.P().edits.parallax],
+      },
+      sel: State.sel ? { kind: State.sel.kind, id: State.sel.id } : null,
+      scrollY: (() => {
+        try {
+          return State.iframeDoc.documentElement.scrollTop ||
+                 State.iframeDoc.body.scrollTop || 0;
+        } catch { return 0; }
+      })(),
+    };
+  },
+
+  push(){
+    if(this.busy || !State.iframeDoc || State.big) return;
+    const snap = this.snap();
+    if(!snap) return;
+    const last = this.list[this.idx];
+    if(last &&
+       last.body === snap.body &&
+       JSON.stringify(last.edits) === JSON.stringify(snap.edits)){
+      return;
+    }
+    this.list = this.list.slice(0, this.idx + 1);
+    this.list.push(snap);
+    if(this.list.length > this.max) this.list.shift();
+    this.idx = this.list.length - 1;
+    this.updateBtns();
+  },
+
+  commit(delay = 450){
+    if(this.busy || !State.iframeDoc || State.big) return;
+    clearTimeout(this.pending);
+    this.pending = setTimeout(() => {
+      this.pending = null;
+      this.push();
+    }, delay);
+  },
+
+  commitNow(){
+    if(this.busy || !State.iframeDoc || State.big) return;
+    clearTimeout(this.pending);
+    this.pending = null;
+    this.push();
+  },
+
+  updateBtns(){
+    const u = Utils.$('#btnUndo'), r = Utils.$('#btnRedo');
+    if(u) u.disabled = (this.idx <= 0 || this.busy);
+    if(r) r.disabled = (this.idx >= this.list.length - 1 || this.busy);
+  },
+
+  async restore(idx){
+    if(idx < 0 || idx >= this.list.length) return;
+    if(!State.iframeDoc) return;
+    this.busy = true;
+    clearTimeout(this.pending);
+    this.pending = null;
+    const snap = this.list[idx];
+    try {
+      State.iframeDoc.body.innerHTML = snap.body;
+      State.P().edits.texts       = new Map(snap.edits.texts);
+      State.P().edits.images      = new Map(snap.edits.images);
+      State.P().edits.colors      = new Map(snap.edits.colors);
+      State.P().edits.positions   = new Map(snap.edits.positions);
+      State.P().edits.backgrounds = new Map(snap.edits.backgrounds);
+      State.P().edits.glows       = new Map(snap.edits.glows);
+      State.P().edits.parallax    = new Map(snap.edits.parallax);
+      EID.assign(State.iframeDoc);
+      await Extractor.all();
+      Reapply.run();
+      Effects.applyLive();
+      Drag.wire(State.iframeDoc);
+      try {
+        State.iframeDoc.documentElement.scrollTop = snap.scrollY || 0;
+        State.iframeDoc.body.scrollTop = snap.scrollY || 0;
+      } catch {}
+      Highlight.clear();
+      State.sel = { kind:null, id:null };
+      if(snap.sel && snap.sel.kind){
+        const ok =
+          snap.sel.kind === 'text'    ? State.texts.find(x => x.id === snap.sel.id) :
+          snap.sel.kind === 'image'   ? State.images.find(x => x.id === snap.sel.id) :
+          snap.sel.kind === 'color'   ? State.colors.find(x => x.hex === snap.sel.id) :
+          snap.sel.kind === 'element' ? State.elements.find(x => x.id === snap.sel.id) :
+          null;
+        if(ok){
+          State.sel = { ...snap.sel };
+          if(snap.sel.kind === 'text' && ok.node?.parentElement) Highlight.el(ok.node.parentElement);
+          else if(snap.sel.kind === 'image' && ok.node) Highlight.el(ok.node);
+          else if(snap.sel.kind === 'element' && ok.el) Highlight.el(ok.el);
+        }
+      }
+      this.idx = idx;
+      UI.updateUI();
+      UI.toast(idx < this.list.length - 1 ? '↶ برگشت' : '↷ جلو', 1200);
+    } catch(err){
+      console.error('restore error:', err);
+      UI.toast('❌ خطا در بازگردانی', 2000);
+    } finally {
+      setTimeout(() => {
+        this.busy = false;
+        this.updateBtns();
+      }, 50);
+    }
+  },
+
+  undo(){
+    if(State.big){ UI.toast('⚠️ Undo در big mode غیرفعاله', 1800); return; }
+    if(this.busy) return;
+    if(this.idx <= 0){ UI.toast('چیزی برای برگردوندن نیست', 1500); return; }
+    this.restore(this.idx - 1);
+  },
+
+  redo(){
+    if(State.big){ UI.toast('⚠️ Undo در big mode غیرفعاله', 1800); return; }
+    if(this.busy) return;
+    if(this.idx >= this.list.length - 1){ UI.toast('چیزی برای جلو بردن نیست', 1500); return; }
+    this.restore(this.idx + 1);
+  },
+
+  clear(){
+    this.list = [];
+    this.idx = -1;
+    clearTimeout(this.pending);
+    this.pending = null;
+    this.updateBtns();
+  },
+
+  init(){
+    this.clear();
+    this.push();
+  }
+};
+
+/* ============================================================
+   ۵. EID — نسخه‌ی اصلاح‌شده (id یکتا)
+============================================================ */
+const EID = {
+  assign(doc){
+    if(!doc) return;
+    // حداکثر id موجود
+    let max = 0;
+    doc.querySelectorAll('[data-eid]').forEach(el => {
+      const eid = el.getAttribute('data-eid');
+      if(eid && /^e\d+$/.test(eid)){
+        const n = parseInt(eid.slice(1), 10);
+        if(n > max) max = n;
+      }
+    });
+    // idهای جدید از max+1
+    let i = max;
+    doc.querySelectorAll('*').forEach(el => {
+      const t = el.tagName.toUpperCase();
+      if(t==='SCRIPT'||t==='STYLE'||t==='NOSCRIPT'||t==='HTML'||t==='HEAD'||t==='BODY') return;
+      if(el.classList?.contains('__sp_bgvid__')) return;
+      if(!el.getAttribute('data-eid')) el.setAttribute('data-eid','e'+(++i));
+    });
+  }
+};
+
+/* ============================================================
+   ۶. Extractor
+============================================================ */
+const Extractor = {
+  async all(){
+    if(!State.iframeDoc) return;
+    await this.texts();
+    await this.images();
+    await this.elements();
+    await this.colors();
+  },
+
+  async texts(){
+    const out = [];
+    let i = 0, tick = 0;
+    const W = State.iframeDoc.createTreeWalker(State.iframeDoc.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while((n = W.nextNode())){
+      tick++;
+      if(tick % 500 === 0){ await Utils.yieldUI(); if(out.length > 15000) break; }
+      const par = n.parentElement;
+      if(par && Utils.SKIP.has(par.tagName.toUpperCase())) continue;
+      if(par && par.closest?.('.__sp_bgvid__')) continue;
+      const r = n.nodeValue || '';
+      if(!r.trim()) continue;
+      const l = r.match(/^\s*/)[0];
+      const t = r.match(/\s*$/)[0];
+      const c = r.slice(l.length, r.length - t.length);
+      if(!c) continue;
+      i++;
+      out.push({
+        id:'t'+String(i).padStart(5,'0'),
+        node: n, lead: l, trail: t,
+        orig: c, cur: c,
+        ctx: this.ctx(n),
+        eid: par?.getAttribute('data-eid'),
+      });
+    }
+    State.texts = out;
+  },
+
+  async images(){
+    const list = [];
+    let i = 0, tick = 0;
+    for(const img of State.iframeDoc.querySelectorAll('img')){
+      tick++;
+      if(tick % 100 === 0) await Utils.yieldUI();
+      if(list.length > 3000) break;
+      i++;
+      list.push({
+        id:'i'+String(i).padStart(4,'0'),
+        node: img,
+        orig: img.getAttribute('src') || '',
+        cur: img.getAttribute('src') || '',
+        alt: img.getAttribute('alt') || '',
+        ctx: this.ctx(img),
+        eid: img.getAttribute('data-eid'),
+      });
+    }
+    State.images = list;
+  },
+
+  async elements(){
+    const list = [];
+    let i = 0;
+    State.iframeDoc.querySelectorAll('[data-eid]').forEach(el => {
+      i++;
+      if(i > 5000) return;
+      list.push({
+        id: el.getAttribute('data-eid'),
+        el,
+        tag: el.tagName.toLowerCase(),
+        label: el.id ? '#'+el.id :
+          (typeof el.className === 'string' ? '.'+el.className.split(/\s+/)[0] : ''),
+        text: (el.textContent||'').trim().slice(0, 40),
+        ctx: this.ctx(el, true),
+      });
+    });
+    State.elements = list;
+  },
+
+  async colors(){
+    const m = new Map();
+    const RE = /#[0-9a-f]{3,8}\b|rgba?\([^)]+\)/gi;
+    let tick = 0;
+    for(const st of State.iframeDoc.querySelectorAll('style')){
+      const txt = st.textContent || '';
+      let match;
+      while((match = RE.exec(txt))){
+        tick++;
+        if(tick % 2000 === 0) await Utils.yieldUI();
+        if(m.size > 300) break;
+        const h = Utils.hex(match[0]) || Utils.rgb(match[0]);
+        if(!h) continue;
+        if(!m.has(h)) m.set(h, { hex:h, count:0, where:new Set() });
+        const o = m.get(h);
+        o.count++;
+        o.where.add('CSS');
+      }
+    }
+    State.colors = [...m.values()].sort((a,b) => b.count - a.count);
+  },
+
+  ctx(n, isEl){
+    if(!n || !State.iframeDoc) return '(static)';
+    let e = isEl ? n : n.parentElement;
+    const p = [];
+    let d = 0;
+    while(e && e !== State.iframeDoc.body && e !== State.iframeDoc.documentElement && d < 4){
+      let s = e.tagName.toLowerCase();
+      if(e.id) s += '#' + e.id;
+      else if(e.classList?.length){
+        const c = [...e.classList][0];
+        if(c && !c.startsWith('sp-') && !c.startsWith('__sp')) s += '.' + c;
+      }
+      p.unshift(s);
+      e = e.parentElement;
+      d++;
+    }
+    return p.join(' › ') || '(body)';
+  },
+
+  async txtStr(){
+    if(!State.P().html) return;
+    const doc = new DOMParser().parseFromString(State.P().html.content, 'text/html');
+    doc.querySelectorAll('script,style,noscript,svg,code,pre,textarea').forEach(e => e.remove());
+    EID.assign(doc);
+    const out = [];
+    let i = 0, tick = 0;
+    const W = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT);
+    let n;
+    while((n = W.nextNode())){
+      tick++;
+      if(tick % 500 === 0){ await Utils.yieldUI(); if(out.length > 20000) break; }
+      const r = n.nodeValue || '';
+      if(!r.trim()) continue;
+      const l = r.match(/^\s*/)[0];
+      const t = r.match(/\s*$/)[0];
+      const c = r.slice(l.length, r.length - t.length);
+      if(!c) continue;
+      i++;
+      out.push({
+        id:'t'+String(i).padStart(5,'0'),
+        node: null, lead: l, trail: t,
+        orig: c, cur: c,
+        ctx: this.ctxStr(n, doc),
+        eid: n.parentElement?.getAttribute('data-eid'),
+      });
+    }
+    State.texts = out;
+    UI.toast(`📝 ${out.length}`);
+  },
+
+  ctxStr(n, doc){
+    const p = [];
+    let e = n.parentElement, d = 0;
+    while(e && e !== doc.body && e !== doc.documentElement && d < 4){
+      let s = e.tagName.toLowerCase();
+      if(e.id) s += '#' + e.id;
+      else if(e.classList?.length) s += '.' + [...e.classList][0];
+      p.unshift(s);
+      e = e.parentElement;
+      d++;
+    }
+    return p.join(' › ') || '(body)';
+  },
+
+  async colStr(){
+    const all = State.P().css.map(f => f.content).join('\n');
+    const m = new Map();
+    const RE = /#[0-9a-f]{3,8}\b|rgba?\([^)]+\)/gi;
+    let match, tick = 0;
+    while((match = RE.exec(all))){
+      tick++;
+      if(tick % 5000 === 0){ await Utils.yieldUI(); if(m.size > 500) break; }
+      const h = Utils.hex(match[0]) || Utils.rgb(match[0]);
+      if(!h) continue;
+      if(!m.has(h)) m.set(h, { hex:h, count:0, where:new Set() });
+      const o = m.get(h);
+      o.count++;
+      o.where.add('CSS');
+    }
+    State.colors = [...m.values()].sort((a,b) => b.count - a.count);
+  },
+
+  async imgStr(){
+    if(!State.P().html) return;
+    const doc = new DOMParser().parseFromString(State.P().html.content, 'text/html');
+    EID.assign(doc);
+    const list = [];
+    let i = 0;
+    doc.querySelectorAll('img').forEach(img => {
+      i++;
+      list.push({
+        id:'i'+String(i).padStart(4,'0'),
+        node: null,
+        orig: img.getAttribute('src') || '',
+        cur: img.getAttribute('src') || '',
+        alt: img.getAttribute('alt') || '',
+        ctx: this.ctxStr(img, doc),
+        eid: img.getAttribute('data-eid'),
+      });
+    });
+    State.images = list;
+  }
+};
+
+/* ============================================================
+   ۷. Effects
+============================================================ */
+const Effects = {
+  PAR_SCRIPT: `(function(){
+    function init(){
+      var els = document.querySelectorAll('[data-parallax]');
+      if(!els.length) return;
+      function upd(){
+        var sy = window.pageYOffset || document.documentElement.scrollTop || 0;
+        for(var i=0;i<els.length;i++){
+          var el = els[i];
+          var o;
+          try { o = JSON.parse(el.getAttribute('data-parallax')); } catch { continue; }
+          if(!o.enabled) continue;
+          var sp = parseFloat(o.speed) || 0.2;
+          var v = sy * sp;
+          if(o.axis === 'x') el.style.transform = 'translateX(' + (-v) + 'px)';
+          else el.style.transform = 'translateY(' + (-v) + 'px)';
+        }
+      }
+      var tick = false;
+      function s(){
+        if(tick) return;
+        tick = true;
+        requestAnimationFrame(function(){ upd(); tick = false; });
+      }
+      window.addEventListener('scroll', s, { passive:true });
+      window.addEventListener('resize', upd);
+      upd();
+    }
+    if(document.readyState === 'loading')
+      document.addEventListener('DOMContentLoaded', init);
+    else init();
+  })();`,
+
+  applyBG(el, bg){
+    el.style.backgroundImage = '';
+    el.style.backgroundColor = '';
+    el.style.backgroundSize = '';
+    el.style.backgroundRepeat = '';
+    el.style.backgroundPosition = '';
+    const oldVid = el.querySelector(':scope > .__sp_bgvid__');
+    if(oldVid) oldVid.remove();
+    if(bg.type === 'color'){
+      el.style.backgroundColor = bg.color || 'transparent';
+    } else if(bg.type === 'gradient'){
+      el.style.backgroundImage = this.makeGrad(bg);
+    } else if(bg.type === 'image'){
+      el.style.backgroundImage = `url("${bg.url||''}")`;
+      el.style.backgroundSize = bg.size || 'cover';
+      el.style.backgroundRepeat = bg.repeat || 'no-repeat';
+      el.style.backgroundPosition = bg.pos || 'center';
+    } else if(bg.type === 'video'){
+      if(!bg.url) return;
+      const v = document.createElement('video');
+      v.className = '__sp_bgvid__';
+      v.src = bg.url;
+      v.autoplay = true;
+      v.muted = true;
+      v.loop = true;
+      v.playsInline = true;
+      v.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;' +
+        'object-fit:cover;z-index:-1;pointer-events:none';
+      if(getComputedStyle(el).position === 'static') el.style.position = 'relative';
+      el.insertBefore(v, el.firstChild);
+    }
+  },
+
+  makeGrad(bg){
+    const a  = bg.angle ?? 135;
+    const c1 = bg.c1 || '#00e5ff';
+    const c2 = bg.c2 || '#b544ff';
+    if(bg.gt === 'radial') return `radial-gradient(circle, ${c1}, ${c2})`;
+    return `linear-gradient(${a}deg, ${c1}, ${c2})`;
+  },
+
+  applyBackgroundsToDoc(doc){
+    State.P().edits.backgrounds.forEach((bg, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(el) this.applyBG(el, bg);
+    });
+  },
+
+  applyGlowsToDoc(doc){
+    State.P().edits.glows.forEach((g, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(!el) return;
+      const ex = (el.style.boxShadow || '')
+        .replace(/\s*0 0 \d+px \d+px #[0-9a-f]{3,8}/gi,'').trim();
+      if(g.on){
+        el.style.boxShadow = (ex ? ex + ', ' : '') +
+          `0 0 ${g.blur ?? 20}px ${g.spread ?? 0}px ${g.color || '#3b9eff'}`;
+      } else {
+        el.style.boxShadow = ex;
+      }
+    });
+  },
+
+  applyParallaxToDoc(doc){
+    State.P().edits.parallax.forEach((p, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(!el) return;
+      if(p.on) el.setAttribute('data-parallax', JSON.stringify(p));
+      else el.removeAttribute('data-parallax');
+    });
+  },
+
+  applyLive(){
+    if(!State.iframeDoc) return;
+    this.applyBackgroundsToDoc(State.iframeDoc);
+    this.applyGlowsToDoc(State.iframeDoc);
+    this.applyParallaxToDoc(State.iframeDoc);
+  },
+
+  applyBGLive(eid, bg){
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    if(!el) return;
+    this.applyBG(el, bg);
+    History.commit();
+  },
+
+  applyGlLive(eid, gl){
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    if(!el) return;
+    const ex = (el.style.boxShadow || '')
+      .replace(/\s*0 0 \d+px \d+px #[0-9a-f]{3,8}/gi,'').trim();
+    if(gl.on){
+      el.style.boxShadow = (ex ? ex + ', ' : '') +
+        `0 0 ${gl.blur ?? 20}px ${gl.spread ?? 0}px ${gl.color || '#3b9eff'}`;
+    } else {
+      el.style.boxShadow = ex;
+    }
+    History.commit();
+  },
+
+  applyParLive(eid, par){
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    if(!el) return;
+    if(par.on) el.setAttribute('data-parallax', JSON.stringify(par));
+    else el.removeAttribute('data-parallax');
+    History.commit();
+  }
+};
+
+/* ============================================================
+   ۸. Reapply
+============================================================ */
+const Reapply = {
+  run(){
+    if(!State.iframeDoc) return;
+    State.P().edits.texts.forEach((txt, id) => {
+      const t = State.texts.find(x => x.id === id);
+      if(t && t.node){
+        t.cur = txt;
+        t.node.nodeValue = t.lead + txt + t.trail;
+      }
+    });
+    State.P().edits.images.forEach((url, id) => {
+      const im = State.images.find(x => x.id === id);
+      if(im && im.node){
+        im.cur = url;
+        im.node.setAttribute('src', url);
+      }
+    });
+    State.P().edits.colors.forEach((to, from) => {
+      State.iframeDoc.querySelectorAll('style').forEach(st => {
+        st.textContent = Utils.cssColor(st.textContent, from, to);
+      });
+      State.iframeDoc.querySelectorAll('[style]').forEach(el => {
+        const o = el.getAttribute('style');
+        const n = Utils.cssColor(o, from, to);
+        if(n !== o) el.setAttribute('style', n);
+      });
+    });
+    State.P().edits.positions.forEach((p, eid) => {
+      const el = State.iframeDoc.querySelector('[data-eid="'+eid+'"]');
+      if(el) el.style.transform = `translate(${p.dx}px, ${p.dy}px)`;
+    });
+  }
+};
+
+/* ============================================================
+   ۹. Preview
+============================================================ */
+const Preview = {
+  revoke(){
+    State.blobs.forEach(u => { try { URL.revokeObjectURL(u); } catch {} });
+    State.blobs = [];
+  },
+
+  buildURL(){
+    this.revoke();
+    if(!State.P().html) return null;
+    const doc = new DOMParser().parseFromString(State.P().html.content, 'text/html');
+    const jsMap = new Map();
+    for(const f of State.P().js){
+      const b = new Blob([f.content], { type:'application/javascript;charset=utf-8' });
+      const u = URL.createObjectURL(b);
+      State.blobs.push(u);
+      jsMap.set(f.name, u);
+      jsMap.set(f.name.toLowerCase(), u);
+      jsMap.set(f.name.split('/').pop(), u);
+      jsMap.set(f.name.replace(/\.(m?js)$/i,''), u);
+    }
+    const cssText = State.P().css.map(f => `/* === ${f.name} === */\n${f.content}`).join('\n\n');
+    doc.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+      const h = l.getAttribute('href') || '';
+      if(!/^(https?:)?\/\//.test(h)) l.remove();
+    });
+    doc.querySelectorAll('style[data-sp]').forEach(s => s.remove());
+    const st = doc.createElement('style');
+    st.setAttribute('data-sp', '1');
+    st.textContent = cssText;
+    doc.head.appendChild(st);
+    doc.querySelectorAll('script[src]').forEach(s => {
+      const src = s.getAttribute('src') || '';
+      if(/^(https?:)?\/\//.test(src)) return;
+      if(src.startsWith('blob:')) return;
+      const fn = src.split('?')[0].split('#')[0].split('/').pop();
+      let m = jsMap.get(fn) || jsMap.get(fn.toLowerCase());
+      if(!m){
+        const ne = fn.replace(/\.(m?js)$/i,'');
+        m = jsMap.get(ne);
+      }
+      if(!m){
+        for(const [k,v] of jsMap){
+          if(src.endsWith(k) || src.endsWith('/'+k)){ m = v; break; }
+        }
+      }
+      if(!m && State.P().js.length === 1) m = jsMap.get(State.P().js[0].name);
+      if(m){
+        s.setAttribute('src', m);
+        s.removeAttribute('crossorigin');
+        s.removeAttribute('integrity');
+      } else if(!State.runJs) {
+        s.remove();
+      }
+    });
+    if(!State.runJs) doc.querySelectorAll('script:not([src])').forEach(s => s.remove());
+    const ps = doc.createElement('script');
+    ps.textContent = Effects.PAR_SCRIPT;
+    doc.body.appendChild(ps);
+    Effects.applyBackgroundsToDoc(doc);
+    Effects.applyGlowsToDoc(doc);
+    Effects.applyParallaxToDoc(doc);
+    const html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML;
+    const b = new Blob([html], { type:'text/html;charset=utf-8' });
+    const u = URL.createObjectURL(b);
+    State.blobs.push(u);
+    return u;
+  },
+
+  render(url){
+    return new Promise(res => {
+      const ifr = Utils.$('#pv');
+      Utils.$('#empty').style.display = 'none';
+      ifr.onload = () => {
+        try { State.iframeDoc = ifr.contentDocument; }
+        catch(e){ State.iframeDoc = null; }
+        res();
+      };
+      ifr.removeAttribute('srcdoc');
+      ifr.src = url;
+    });
+  },
+
+  totalSize(){
+    return (State.P().html?.size || 0) +
+           State.P().css.reduce((s,f) => s+f.size, 0) +
+           State.P().js.reduce((s,f) => s+f.size, 0);
+  },
+
+  async rebuild(){
+    const total = this.totalSize();
+    State.big = total > Utils.BIG_LIMIT;
+    if(total > Utils.HARD_LIMIT){
+      State.big = true;
+      UI.toast('⚠️ فایل حجیمه — حالت استاتیک', 4000);
+    }
+    if(State.big){
+      await BigMode.init();
+      UI.updateUI();
+      History.clear();
+      return;
+    }
+    Utils.$('#bigMode').classList.remove('show');
+    Utils.$('#pv').style.display = 'block';
+    const u = this.buildURL();
+    if(!u) return;
+    await this.render(u);
+    Selection.wire();
+    await new Promise(r => setTimeout(r, State.runJs ? 1500 : 250));
+    try { State.iframeDoc = Utils.$('#pv').contentDocument; } catch {}
+    if(!State.iframeDoc){
+      State.big = true;
+      await BigMode.init();
+      UI.updateUI();
+      History.clear();
+      return;
+    }
+    EID.assign(State.iframeDoc);
+    Interact.apply();
+    await Extractor.all();
+    Reapply.run();
+    Effects.applyLive();
+    Drag.wire(State.iframeDoc);
+    if(State.autoIntro && !State.interact){
+      setTimeout(() => Intro.run(), 400);
+    }
+    UI.updateUI();
+    setTimeout(() => { History.init(); }, 150);
+  }
+};
+
+/* ============================================================
+   ۱۰. BigMode
+============================================================ */
+const BigMode = {
+  async init(){
+    Utils.$('#pv').style.display = 'none';
+    const h = State.P().html?.size || 0;
+    const c = State.P().css.reduce((s,f) => s+f.size, 0);
+    const j = State.P().js.reduce((s,f) => s+f.size, 0);
+    Utils.$('#bigStats').innerHTML = `
+      <div class="stat"><div class="n">${Utils.fmt(h)}</div><div class="l">HTML</div></div>
+      <div class="stat"><div class="n">${Utils.fmt(c)}</div><div class="l">CSS (${State.P().css.length})</div></div>
+      <div class="stat"><div class="n">${Utils.fmt(j)}</div><div class="l">JS (${State.P().js.length})</div></div>
+      <div class="stat"><div class="n">${Utils.fmt(Preview.totalSize())}</div><div class="l">کل</div></div>`;
+    Utils.$('#bigMode').classList.add('show');
+    State.iframeDoc = null;
+    State.texts = [];
+    State.images = [];
+    State.colors = [];
+    State.elements = [];
+  }
+};
+
+/* ============================================================
+   ۱۱. Highlight
+============================================================ */
+const Highlight = {
+  clear(){
+    if(!State.iframeDoc) return;
+    State.iframeDoc.querySelectorAll('.sp-sel').forEach(el => el.classList.remove('sp-sel'));
+    State.iframeDoc.querySelectorAll('[data-sp-o]').forEach(el => {
+      el.style.outline = el.dataset.spO || '';
+      el.style.outlineOffset = el.dataset.spOff || '';
+      delete el.dataset.spO;
+      delete el.dataset.spOff;
+    });
+  },
+  el(el){
+    if(!el) return;
+    el.classList.add('sp-sel');
+    el.dataset.spO = el.style.outline || '';
+    el.dataset.spOff = el.style.outlineOffset || '';
+    el.style.outline = '2px solid #3b9eff';
+    el.style.outlineOffset = '3px';
+    try { el.scrollIntoView({ behavior:'smooth', block:'center' }); } catch {}
+  }
+};
+
+/* ============================================================
+   ۱۲. Selection
+============================================================ */
+const Selection = {
+  wire(){
+    const doc = State.iframeDoc;
+    if(!doc) return;
+    doc.addEventListener('click', e => {
+      if(!State.interact) return;
+      const a = e.target.closest?.('a[href]');
+      if(!a) return;
+      const t = (a.getAttribute('target')||'').toLowerCase();
+      if(t === '_top' || t === '_parent'){
+        e.preventDefault();
+        UI.toast('⚠️ ناوبری مسدود', 2500);
+      }
+    }, true);
+    doc.addEventListener('click', e => {
+      if(!State.iframeDoc) return;
+      if(State.interact) return;
+      if(e.target.isContentEditable) return;
+      if(State.dragMoved){ e.preventDefault(); e.stopPropagation(); return; }
+      e.preventDefault();
+      e.stopPropagation();
+      const img = e.target.closest?.('img');
+      if(img){
+        const f = State.images.find(x => x.node === img);
+        if(f){ this.select('image', f.id); return; }
+      }
+      const n = this.textNodeAt(doc, e.clientX, e.clientY);
+      if(n){
+        const f = State.texts.find(t => t.node === n);
+        if(f){ this.select('text', f.id); return; }
+      }
+      const el = e.target.closest?.('[data-eid]');
+      if(el) this.select('element', el.getAttribute('data-eid'));
+    }, true);
+    doc.addEventListener('dblclick', e => {
+      if(State.interact) return;
+      if(State.drag) return;
+      const target = e.target;
+      if(!target || target === doc.body || target === doc.documentElement) return;
+      if(target.isContentEditable) return;
+      const tag = target.tagName?.toUpperCase() || '';
+      if(['SCRIPT','STYLE','INPUT','TEXTAREA','SELECT','IFRAME','IMG',
+          'VIDEO','CANVAS','SVG','BR','HR'].includes(tag)) return;
+      let el = target;
+      while(el && el !== doc.body){
+        const t = el.tagName?.toUpperCase();
+        if(['SCRIPT','STYLE','INPUT','TEXTAREA','SELECT','IFRAME','IMG',
+            'VIDEO','CANVAS','SVG'].includes(t)) return;
+        if(el.getAttribute && el.getAttribute('data-eid')) break;
+        el = el.parentElement;
+      }
+      if(!el || el === doc.body) return;
+      e.preventDefault();
+      e.stopPropagation();
+      InlineEdit.start(el);
+    }, true);
+  },
+
+  textNodeAt(doc, x, y){
+    let r = null;
+    if(doc.caretRangeFromPoint) r = doc.caretRangeFromPoint(x, y);
+    else if(doc.caretPositionFromPoint){
+      const p = doc.caretPositionFromPoint(x, y);
+      if(p){
+        r = doc.createRange();
+        r.setStart(p.offsetNode, p.offset);
+        r.collapse(true);
+      }
+    }
+    if(!r) return null;
+    let n = r.startContainer;
+    if(n.nodeType === 1) n = n.childNodes[r.startOffset] || n.firstChild;
+    if(n && n.nodeType === 3 && n.nodeValue.trim()) return n;
+    if(n?.parentElement){
+      for(const c of n.parentElement.childNodes){
+        if(c.nodeType === 3 && c.nodeValue.trim()) return c;
+      }
+    }
+    return null;
+  },
+
+  select(kind, id){
+    if(State.interact){ UI.toast('👆 اول تعامل رو خاموش کن'); return; }
+    State.sel = { kind, id };
+    Sheets.close();
+    if(kind === 'text'){
+      const t = State.texts.find(x => x.id === id);
+      if(t){ Highlight.clear(); if(t.node?.parentElement) Highlight.el(t.node.parentElement); Editor.render('text', t); }
+    } else if(kind === 'image'){
+      const im = State.images.find(x => x.id === id);
+      if(im){ Highlight.clear(); if(im.node) Highlight.el(im.node); Editor.render('image', im); }
+    } else if(kind === 'color'){
+      const c = State.colors.find(x => x.hex === id);
+      if(c){ Highlight.clear(); Editor.render('color', c); }
+    } else if(kind === 'element'){
+      const el = State.elements.find(x => x.id === id);
+      if(el){ Highlight.clear(); if(el.el) Highlight.el(el.el); Editor.render('element', el); }
+    }
+  }
+};
+
+/* ============================================================
+   ۱۳. InlineEdit
+============================================================ */
+const InlineEdit = {
+  start(el){
+    if(!el || el.isContentEditable) return;
+    const eid = el.getAttribute('data-eid');
+    const originalHtml = el.innerHTML;
+    const prevOutline = el.style.outline;
+    const prevOffset  = el.style.outlineOffset;
+    const prevCursor  = el.style.cursor;
+    el.setAttribute('contenteditable', 'true');
+    el.style.outline = '2px dashed #3b9eff';
+    el.style.outlineOffset = '2px';
+    el.style.cursor = 'text';
+    el.style.webkitUserSelect = 'text';
+    el.style.userSelect = 'text';
+    try {
+      el.focus({ preventScroll: true });
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    } catch(err){ console.warn('focus error', err); }
+    let finished = false;
+    const finish = cancel => {
+      if(finished) return;
+      finished = true;
+      el.removeEventListener('blur', onBlur);
+      el.removeEventListener('keydown', onKey);
+      el.removeEventListener('paste', onPaste);
+      el.removeAttribute('contenteditable');
+      el.style.outline = prevOutline;
+      el.style.outlineOffset = prevOffset;
+      el.style.cursor = prevCursor;
+      el.style.webkitUserSelect = '';
+      el.style.userSelect = '';
+      if(cancel){
+        el.innerHTML = originalHtml;
+        return;
+      }
+      try {
+        this.extractFrom(el, eid);
+        UI.toast('✓ ذخیره شد', 1500);
+        History.commitNow();
+      } catch(err){
+        console.error('extract error', err);
+      }
+    };
+    const onBlur = () => finish(false);
+    const onKey = ev => {
+      if(ev.key === 'Escape'){
+        ev.preventDefault();
+        finish(true);
+        return;
+      }
+      if(ev.key === 'Enter' && !ev.shiftKey && !ev.ctrlKey && !ev.metaKey){
+        const tag = el.tagName?.toUpperCase();
+        if(['H1','H2','H3','H4','H5','H6','A','BUTTON','LABEL','SPAN'].includes(tag)){
+          ev.preventDefault();
+          el.blur();
+        }
+      }
+    };
+    const onPaste = ev => {
+      ev.preventDefault();
+      const txt = (ev.clipboardData || window.clipboardData).getData('text/plain');
+      if(txt) document.execCommand('insertText', false, txt);
+    };
+    el.addEventListener('blur', onBlur);
+    el.addEventListener('keydown', onKey);
+    el.addEventListener('paste', onPaste);
+  },
+
+  extractFrom(el, eid){
+    if(!State.iframeDoc) return;
+    State.texts = State.texts.filter(t => !t.node || !el.contains(t.node));
+    const walker = State.iframeDoc.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let node;
+    while((node = walker.nextNode())){
+      const raw = node.nodeValue || '';
+      if(!raw.trim()) continue;
+      const par = node.parentElement;
+      if(par && Utils.SKIP.has(par.tagName.toUpperCase())) continue;
+      if(par && par.closest?.('.__sp_bgvid__')) continue;
+      const l = raw.match(/^\s*/)[0];
+      const t = raw.match(/\s*$/)[0];
+      const cc = raw.slice(l.length, raw.length - t.length);
+      if(!cc) continue;
+      const id = 't' + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+      State.texts.push({
+        id,
+        node,
+        lead: l,
+        trail: t,
+        orig: cc,
+        cur: cc,
+        ctx: Extractor.ctx(node),
+        eid: par?.getAttribute('data-eid') || eid,
+      });
+    }
+    UI.updateUI();
+  }
+};
+
+/* ============================================================
+   ۱۴. Drag
+============================================================ */
+const Drag = {
+  wire(doc){
+    if(!doc) return;
+    let dr = null;
+    doc.addEventListener('pointerdown', e => {
+      if(!State.drag || State.interact) return;
+      if(!e.isPrimary) return;
+      const el = e.target.closest?.('[data-eid]');
+      if(!el) return;
+      if(e.target.isContentEditable) return;
+      const tg = e.target.tagName.toUpperCase();
+      if(tg === 'INPUT' || tg === 'TEXTAREA' || tg === 'SELECT') return;
+      const eid = el.getAttribute('data-eid');
+      const p = State.P().edits.positions.get(eid) || { dx:0, dy:0 };
+      dr = {
+        el, eid,
+        sx: e.clientX, sy: e.clientY,
+        sdx: p.dx, sdy: p.dy,
+        moved: false,
+      };
+      try { el.setPointerCapture?.(e.pointerId); } catch {}
+      State.dragMoved = false;
+    }, true);
+    const mv = e => {
+      if(!dr || !e.isPrimary || State.interact) return;
+      const dx = dr.sdx + (e.clientX - dr.sx);
+      const dy = dr.sdy + (e.clientY - dr.sy);
+      if(!dr.moved){
+        if(Math.abs(e.clientX - dr.sx) + Math.abs(e.clientY - dr.sy) < 4) return;
+        dr.moved = true;
+        State.dragMoved = true;
+      }
+      dr.el.style.transform = `translate(${dx}px, ${dy}px)`;
+      State.P().edits.positions.set(dr.eid, { dx, dy });
+      const xin = Utils.$('#posX'), yin = Utils.$('#posY');
+      if(xin) xin.value = Math.round(dx);
+      if(yin) yin.value = Math.round(dy);
+    };
+    const up = e => {
+      if(!dr) return;
+      const wasMoved = dr.moved;
+      if(dr.moved){
+        const p = State.P().edits.positions.get(dr.eid);
+        if(p && Math.abs(p.dx) < 1 && Math.abs(p.dy) < 1){
+          State.P().edits.positions.delete(dr.eid);
+          dr.el.style.transform = '';
+        }
+        try { e.stopPropagation(); e.preventDefault(); } catch {}
+      }
+      dr = null;
+      setTimeout(() => { State.dragMoved = false; }, 250);
+      if(wasMoved) History.commitNow();
+    };
+    doc.addEventListener('pointermove', mv, true);
+    doc.addEventListener('pointerup', up, true);
+    doc.addEventListener('pointercancel', up, true);
+  }
+};
+
+/* ============================================================
+   ۱۵. Interact & Intro
+============================================================ */
+const Interact = {
+  apply(){
+    if(!State.iframeDoc) return;
+    State.iframeDoc.body.classList.toggle('sp-interact-mode', State.interact);
+    Utils.$('#mpill').classList.toggle('on', State.interact);
+    Utils.$('#btnInteract').classList.toggle('on', State.interact);
+  },
+  set(on){
+    if(on && State.big){ UI.toast('⚠️ در big mode کار نمی‌کنه'); return; }
+    State.interact = on;
+    if(on && State.drag){
+      State.drag = false;
+      Utils.$('#btnDrag').classList.remove('on');
+      if(State.iframeDoc) State.iframeDoc.body.classList.remove('sp-drag-mode');
+    }
+    this.apply();
+    UI.toast(on ? '👆 حالت تعامل — لینک‌ها کار می‌کنن' : '✏️ حالت ویرایش');
+  }
+};
+
+const Intro = {
+  run(){
+    const doc = State.iframeDoc;
+    if(!doc) return 0;
+    const vw = innerWidth || 400;
+    const vh = innerHeight || 800;
+    let n = 0;
+    doc.querySelectorAll('body > *, body > * > *').forEach(el => {
+      if(el === doc.body || el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return;
+      try {
+        const cs = doc.defaultView.getComputedStyle(el);
+        const id = (el.id||'').toLowerCase();
+        const cl = (typeof el.className === 'string' ? el.className : '').toLowerCase();
+        const isIntro = /intro|splash|preload|loader|loading|cover|startup|boot/.test(id + ' ' + cl);
+        const isFS = (cs.position === 'fixed' || cs.position === 'absolute') &&
+          el.offsetWidth >= vw*.85 && el.offsetHeight >= vh*.85;
+        const z = parseInt(cs.zIndex || 0) >= 50;
+        if(isIntro || (isFS && z)){
+          el.style.display = 'none';
+          el.style.visibility = 'hidden';
+          el.style.opacity = '0';
+          el.style.pointerEvents = 'none';
+          n++;
+        }
+      } catch {}
+    });
+    doc.body.style.overflow = 'auto';
+    doc.documentElement.style.overflow = 'auto';
+    if(n > 0){
+      setTimeout(async () => {
+        EID.assign(State.iframeDoc);
+        await Extractor.all();
+        Reapply.run();
+        Effects.applyLive();
+        UI.updateUI();
+      }, 200);
+    }
+    return n;
+  }
+};
+
+/* ============================================================
+   ۱۶. Editor
+============================================================ */
+const Editor = {
+  render(kind, data){
+    Utils.$('#elTag').textContent = kind === 'color'
+      ? data.hex
+      : '<' + (data.tag || (kind==='text'?'text':'el')) + '>';
+    Utils.$('#elTag').classList.remove('empty');
+    const tabFor = kind === 'color' ? 'style' : 'content';
+    Utils.$$('.etab').forEach(t => t.classList.toggle('on', t.dataset.etab === tabFor));
+    Utils.$$('.ep').forEach(p => p.classList.toggle('on', p.id === 'ep' + (kind === 'color' ? 'Style' : 'Content')));
+    this.content(kind, data);
+    this.style(kind, data);
+    this.effects(kind, data);
+    this.layer(kind, data);
+    Utils.$('#editor').classList.add('open');
+  },
+
+  eidOf(kind, data){
+    if(kind === 'text')    return data.eid;
+    if(kind === 'image')   return data.eid;
+    if(kind === 'element') return data.id;
+    return null;
+  },
+
+  content(kind, data){
+    const p = Utils.$('#epContent');
+    if(kind === 'color'){ p.innerHTML = ''; return; }
+    let h = '';
+    if(kind === 'text'){
+      h = `
+        <div class="grp"><h4>مسیر</h4><div class="path">${Utils.esc(data.ctx)}</div></div>
+        <div class="grp"><h4>متن اصلی</h4>
+          <div class="path" style="color:var(--muted)">${Utils.esc(data.orig)}</div></div>
+        <div class="grp"><h4>متن جدید</h4>
+          <textarea id="edTA" rows="5" autocorrect="off" spellcheck="false"></textarea></div>
+        <div class="acts">
+          <button class="pri" id="bTs">✓ ذخیره</button>
+          <button id="bTr">↺</button>
+          <button class="danger" id="bTc">✕</button>
+        </div>`;
+    } else if(kind === 'image'){
+      h = `
+        <div class="grp"><h4>مسیر</h4><div class="path">${Utils.esc(data.ctx)}</div></div>
+        <div class="grp"><h4>پیش‌نمایش</h4>
+          <img class="preview" id="iP" src="${Utils.esc(data.cur)}"></div>
+        <div class="grp"><h4>آدرس جدید</h4>
+          <input type="url" id="iU"
+            value="${Utils.esc(data.cur.startsWith('data:')?'':data.cur)}"
+            autocapitalize="off" spellcheck="false" placeholder="https://...">
+          <div class="chips" style="margin-top:8px">
+            <button class="chip" id="iF">📁 آپلود از گوشی</button>
+          </div></div>`;
+    } else if(kind === 'element'){
+      const el = data.el;
+      const isInp = el && ['input','textarea','select'].includes(el.tagName.toLowerCase());
+      const isA   = el && el.tagName.toLowerCase() === 'a';
+      const isImg = el && el.tagName.toLowerCase() === 'img';
+      h = `<div class="grp"><h4>مسیر</h4><div class="path">${Utils.esc(data.ctx)}</div></div>`;
+      if(!isImg && !isInp){
+        h += `<div class="grp"><h4>HTML داخلی</h4>
+          <textarea id="edH" rows="7" autocorrect="off" spellcheck="false"
+            style="direction:ltr;text-align:left">${Utils.esc(el?.innerHTML||'')}</textarea>
+          <div class="acts"><button class="pri" id="bHs">✓ ذخیره HTML</button></div></div>`;
+      }
+      if(isImg){
+        h += `<div class="grp"><h4>آدرس تصویر</h4>
+          <input type="url" id="elSrc"
+            value="${Utils.esc(el.getAttribute('src')||'')}" spellcheck="false"></div>`;
+      }
+      if(isA){
+        h += `<div class="grp"><h4>لینک</h4>
+          <input type="text" id="elHref"
+            value="${Utils.esc(el.getAttribute('href')||'')}"></div>`;
+      }
+      if(isInp){
+        h += `<div class="grp"><h4>value</h4>
+          <input type="text" id="elVal"
+            value="${Utils.esc(el.getAttribute('value')||'')}"></div>
+          <div class="grp"><h4>placeholder</h4>
+          <input type="text" id="elPh"
+            value="${Utils.esc(el.getAttribute('placeholder')||'')}"></div>`;
+      }
+      h += `<div class="grp"><h4>کلاس‌ها</h4>
+        <input type="text" id="elCls"
+          value="${Utils.esc(typeof el.className === 'string' ? el.className : '')}"
+          style="direction:ltr;text-align:left;font-family:ui-monospace,monospace"></div>
+        <div class="acts"><button class="pri" id="bEs">✓ ذخیره</button></div>`;
+    }
+    p.innerHTML = h;
+    if(kind === 'text'){
+      const ta = Utils.$('#edTA');
+      ta.value = data.cur;
+      setTimeout(() => { try { ta.focus(); } catch {} }, 200);
+      ta.oninput = () => this.applyTxt(data.id, ta.value);
+      Utils.$('#bTs').onclick = () => { this.applyTxt(data.id, ta.value); Sheets.close(); UI.toast('✓'); };
+      Utils.$('#bTr').onclick = () => { ta.value = data.orig; this.applyTxt(data.id, data.orig); };
+      Utils.$('#bTc').onclick = () => { ta.value = ''; this.applyTxt(data.id, ''); };
+    } else if(kind === 'image'){
+      const u = Utils.$('#iU');
+      const apply = v => {
+        data.cur = v;
+        if(data.node) data.node.setAttribute('src', v);
+        Utils.$('#iP').src = v;
+        if(v === data.orig) State.P().edits.images.delete(data.id);
+        else State.P().edits.images.set(data.id, v);
+        History.commit();
+      };
+      u.oninput = () => {
+        if(/^https?:\/\//.test(u.value) || u.value.startsWith('data:'))
+          apply(u.value.trim());
+      };
+      Utils.$('#iF').onclick = () => Media.pick('image/*', url => { apply(url); u.value = ''; });
+    } else if(kind === 'element'){
+      const el = data.el;
+      if(!el) return;
+      Utils.$('#bHs')?.addEventListener('click', () => {
+        el.innerHTML = Utils.$('#edH').value;
+        EID.assign(State.iframeDoc);
+        History.commitNow();
+        UI.toast('✓ HTML ذخیره');
+      });
+      const src = Utils.$('#elSrc');
+      if(src) src.oninput = () => { el.setAttribute('src', src.value); History.commit(); };
+      const href = Utils.$('#elHref');
+      if(href) href.oninput = () => { el.setAttribute('href', href.value); History.commit(); };
+      const val = Utils.$('#elVal');
+      if(val) val.oninput = () => { el.setAttribute('value', val.value); History.commit(); };
+      const ph = Utils.$('#elPh');
+      if(ph) ph.oninput = () => { el.setAttribute('placeholder', ph.value); History.commit(); };
+      const cls = Utils.$('#elCls');
+      if(cls) cls.oninput = () => {
+        try { el.className = cls.value; History.commit(); } catch {}
+      };
+      Utils.$('#bEs')?.addEventListener('click', () => { Sheets.close(); UI.toast('✓'); });
+    }
+  },
+
+  applyTxt(id, txt){
+    const t = State.texts.find(x => x.id === id);
+    if(!t) return;
+    t.cur = txt;
+    if(t.node) t.node.nodeValue = t.lead + txt + t.trail;
+    if(txt === t.orig) State.P().edits.texts.delete(id);
+    else State.P().edits.texts.set(id, txt);
+    History.commit();
+  },
+
+  style(kind, data){
+    const p = Utils.$('#epStyle');
+    if(kind === 'color'){
+      const cur = State.P().edits.colors.get(data.hex) || data.hex;
+      p.innerHTML = `
+        <div class="grp"><h4>رنگ اصلی</h4>
+          <div class="path" style="display:flex;align-items:center;gap:10px;color:var(--text)">
+            <span style="width:22px;height:22px;border-radius:5px;background:${Utils.esc(data.hex)};
+              display:inline-block;border:1px solid var(--bd2)"></span>
+            <span style="font-family:ui-monospace,monospace">${Utils.esc(data.hex)}</span>
+            <span style="color:var(--dim);margin-inline-start:auto">×${data.count}</span>
+          </div>
+        </div>
+        <div class="grp"><h4>رنگ جدید</h4>
+          <input type="color" id="cP" value="${Utils.esc(cur)}" style="height:60px">
+          <input type="text" id="cH" value="${Utils.esc(cur)}"
+            style="margin-top:8px;font-family:ui-monospace,monospace;direction:ltr;text-align:left">
+        </div>
+        <div class="acts"><button class="pri" id="cS">✓ اعمال روی همه</button></div>`;
+      const cP = Utils.$('#cP'), cH = Utils.$('#cH');
+      const upd = v => { Color.apply(data.hex, v); cH.value = v; };
+      cP.oninput = () => upd(cP.value);
+      cH.oninput = () => {
+        if(/^#[0-9a-f]{6}$/i.test(cH.value)){ cP.value = cH.value; upd(cH.value); }
+      };
+      Utils.$('#cS').onclick = () => { Color.apply(data.hex, cP.value); Sheets.close(); UI.toast('✓'); };
+      return;
+    }
+    const eid = this.eidOf(kind, data);
+    if(!eid){ p.innerHTML = '<div class="noSel">قابل استایل نیست</div>'; return; }
+    const bg = State.P().edits.backgrounds.get(eid) || { type:'none' };
+    const gl = State.P().edits.glows.get(eid) || { on:false, color:'#3b9eff', blur:20, spread:0 };
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    const cs = el ? State.iframeDoc.defaultView.getComputedStyle(el) : null;
+    p.innerHTML = `
+      <div class="grp"><h4>رنگ متن</h4>
+        <input type="color" id="stCol"
+          value="${Utils.esc(cs ? (Utils.rgb(cs.color) || '#edf3ff') : '#edf3ff')}" style="height:40px"></div>
+      <div class="grp"><h4>پس‌زمینه</h4>
+        <div class="seg" id="bgT">
+          <button data-bg="none" class="${bg.type==='none'?'on':''}">هیچ</button>
+          <button data-bg="color" class="${bg.type==='color'?'on':''}">رنگ</button>
+          <button data-bg="gradient" class="${bg.type==='gradient'?'on':''}">گرادینت</button>
+          <button data-bg="image" class="${bg.type==='image'?'on':''}">عکس</button>
+          <button data-bg="video" class="${bg.type==='video'?'on':''}">فیلم</button>
+        </div>
+        <div id="bgX"></div>
+      </div>
+      <div class="grp"><h4>هاله (Glow)</h4>
+        <div class="seg" id="glT">
+          <button data-g="on" class="${gl.on?'on':''}">روشن</button>
+          <button data-g="off" class="${!gl.on?'on':''}">خاموش</button>
+        </div>
+        <div id="glX"></div>
+      </div>
+      <div class="grp"><h4>مشخصات</h4>
+        <div class="ctl"><label>گردی</label>
+          <input type="range" id="rRad" min="0" max="80"
+            value="${parseInt(cs?.borderTopLeftRadius) || 0}"></div>
+        <div class="ctl"><label>شفافیت</label>
+          <input type="range" id="rOp" min="0" max="100"
+            value="${Math.round((parseFloat(cs?.opacity) || 1) * 100)}"></div>
+        <div class="ctl"><label>چرخش</label>
+          <input type="range" id="rRot" min="-180" max="180"
+            value="${this.getRot(el)}"></div>
+      </div>
+      <div class="acts">
+        <button class="pri" id="stS">✓ ذخیره</button>
+        <button id="stR">↺ ریست</button>
+      </div>`;
+    Utils.$('#stCol').oninput = e => this.applyElStyle(eid, 'color', e.target.value);
+    Utils.$$('#bgT button').forEach(b => b.onclick = () => {
+      Utils.$$('#bgT button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      bg.type = b.dataset.bg;
+      State.P().edits.backgrounds.set(eid, bg);
+      this.renderBgX(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    });
+    this.renderBgX(eid, bg);
+    Utils.$$('#glT button').forEach(b => b.onclick = () => {
+      Utils.$$('#glT button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      gl.on = b.dataset.g === 'on';
+      State.P().edits.glows.set(eid, gl);
+      this.renderGlX(eid, gl);
+      Effects.applyGlLive(eid, gl);
+    });
+    this.renderGlX(eid, gl);
+    Utils.$('#rRad').oninput = e => this.applyElStyle(eid, 'borderRadius', e.target.value + 'px');
+    Utils.$('#rOp').oninput  = e => this.applyElStyle(eid, 'opacity', e.target.value / 100);
+    Utils.$('#rRot').oninput = e => {
+      const p = State.P().edits.positions.get(eid) || { dx:0, dy:0 };
+      if(el) el.style.transform = `translate(${p.dx}px, ${p.dy}px) rotate(${e.target.value}deg)`;
+      History.commit();
+    };
+    Utils.$('#stS').onclick = () => { Sheets.close(); UI.toast('✓'); };
+    Utils.$('#stR').onclick = () => { this.resetElStyle(eid); this.render(kind, data); };
+  },
+
+  getRot(el){
+    if(!el || !el.style.transform) return 0;
+    const m = /rotate\(([-\d.]+)deg\)/.exec(el.style.transform);
+    return m ? parseFloat(m[1]) : 0;
+  },
+
+  renderBgX(eid, bg){
+    const box = Utils.$('#bgX');
+    if(!box) return;
+    if(bg.type === 'none'){ box.innerHTML = ''; return; }
+    let h = '';
+    if(bg.type === 'color'){
+      h = `<div class="ctl"><label>رنگ</label>
+        <input type="color" id="bgC" value="${Utils.esc(bg.color||'#0e1018')}" style="height:40px"></div>`;
+    } else if(bg.type === 'gradient'){
+      h = `<div style="height:50px;border-radius:9px;border:1px solid var(--bd2);
+        margin-bottom:8px;background:${Effects.makeGrad(bg)}"></div>
+        <div class="seg" id="gT">
+          <button data-gt="linear" class="${bg.gt!=='radial'?'on':''}">خطی</button>
+          <button data-gt="radial" class="${bg.gt==='radial'?'on':''}">شعاعی</button>
+        </div>
+        <div class="ctl"><label>رنگ ۱</label>
+          <input type="color" id="g1" value="${Utils.esc(bg.c1||'#00e5ff')}" style="height:40px"></div>
+        <div class="ctl"><label>رنگ ۲</label>
+          <input type="color" id="g2" value="${Utils.esc(bg.c2||'#b544ff')}" style="height:40px"></div>
+        <div class="ctl"><label>زاویه</label>
+          <input type="range" id="gA" min="0" max="360" value="${bg.angle ?? 135}"></div>`;
+    } else if(bg.type === 'image'){
+      h = `<div class="ctl"><label>آدرس</label>
+        <input type="url" id="bgI" value="${Utils.esc(bg.url||'')}"
+          spellcheck="false" placeholder="https://..."></div>
+        <div class="chips"><button class="chip" id="bgIF">📁 آپلود عکس</button></div>
+        <div class="ctl" style="margin-top:8px"><label>اندازه</label>
+          <select id="bgSz">
+            <option value="cover" ${bg.size==='cover'?'selected':''}>cover</option>
+            <option value="contain" ${bg.size==='contain'?'selected':''}>contain</option>
+            <option value="auto" ${bg.size==='auto'?'selected':''}>auto</option>
+          </select></div>`;
+    } else if(bg.type === 'video'){
+      h = `<div class="ctl"><label>آدرس</label>
+        <input type="url" id="bgV" value="${Utils.esc(bg.url||'')}"
+          spellcheck="false" placeholder="mp4/webm"></div>
+        <div class="chips"><button class="chip" id="bgVF">📁 آپلود فیلم</button></div>`;
+    }
+    box.innerHTML = h;
+    const bc = Utils.$('#bgC');
+    if(bc) bc.oninput = () => {
+      bg.color = bc.value;
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    };
+    ['g1','g2','gA'].forEach(id => {
+      const el = Utils.$('#' + id);
+      if(el) el.oninput = () => {
+        if(Utils.$('#g1')) bg.c1 = Utils.$('#g1').value;
+        if(Utils.$('#g2')) bg.c2 = Utils.$('#g2').value;
+        if(Utils.$('#gA')) bg.angle = parseInt(Utils.$('#gA').value);
+        State.P().edits.backgrounds.set(eid, bg);
+        const prev = Utils.$('#bgX > div');
+        if(prev) prev.style.background = Effects.makeGrad(bg);
+        Effects.applyBGLive(eid, bg);
+      };
+    });
+    Utils.$$('#gT button').forEach(b => b.onclick = () => {
+      Utils.$$('#gT button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      bg.gt = b.dataset.gt;
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    });
+    const bi = Utils.$('#bgI');
+    if(bi) bi.oninput = () => {
+      bg.url = bi.value;
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    };
+    const bsz = Utils.$('#bgSz');
+    if(bsz) bsz.onchange = () => {
+      bg.size = bsz.value;
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    };
+    const bif = Utils.$('#bgIF');
+    if(bif) bif.onclick = () => Media.pick('image/*', u => {
+      bg.url = u;
+      bg.type = 'image';
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+      this.renderBgX(eid, bg);
+    });
+    const bv = Utils.$('#bgV');
+    if(bv) bv.oninput = () => {
+      bg.url = bv.value;
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+    };
+    const bvf = Utils.$('#bgVF');
+    if(bvf) bvf.onclick = () => Media.pick('video/*', u => {
+      bg.url = u;
+      bg.type = 'video';
+      State.P().edits.backgrounds.set(eid, bg);
+      Effects.applyBGLive(eid, bg);
+      this.renderBgX(eid, bg);
+    });
+  },
+
+  renderGlX(eid, gl){
+    const box = Utils.$('#glX');
+    if(!box) return;
+    if(!gl.on){ box.innerHTML = ''; return; }
+    box.innerHTML = `
+      <div class="ctl"><label>رنگ</label>
+        <input type="color" id="glC" value="${Utils.esc(gl.color||'#3b9eff')}" style="height:40px"></div>
+      <div class="ctl"><label>شدت <span style="color:var(--ok)">${gl.blur ?? 20}</span></label>
+        <input type="range" id="glB" min="0" max="120" value="${gl.blur ?? 20}"></div>
+      <div class="ctl"><label>پخش <span style="color:var(--ok)">${gl.spread ?? 0}</span></label>
+        <input type="range" id="glS" min="0" max="40" value="${gl.spread ?? 0}"></div>
+      <div class="chips">
+        <button class="chip" data-c="#3b9eff">آبی</button>
+        <button class="chip" data-c="#a855f7">بنفش</button>
+        <button class="chip" data-c="#ec4899">صورتی</button>
+        <button class="chip" data-c="#34d399">سبز</button>
+        <button class="chip" data-c="#f59e0b">طلایی</button>
+        <button class="chip" data-c="#ef4444">قرمز</button>
+        <button class="chip" data-c="#ffffff">سفید</button>
+      </div>`;
+    Utils.$('#glC').oninput = e => {
+      gl.color = e.target.value;
+      State.P().edits.glows.set(eid, gl);
+      Effects.applyGlLive(eid, gl);
+    };
+    Utils.$('#glB').oninput = e => {
+      gl.blur = parseInt(e.target.value);
+      State.P().edits.glows.set(eid, gl);
+      Effects.applyGlLive(eid, gl);
+      e.target.previousElementSibling.innerHTML =
+        `شدت <span style="color:var(--ok)">${gl.blur}</span>`;
+    };
+    Utils.$('#glS').oninput = e => {
+      gl.spread = parseInt(e.target.value);
+      State.P().edits.glows.set(eid, gl);
+      Effects.applyGlLive(eid, gl);
+      e.target.previousElementSibling.innerHTML =
+        `پخش <span style="color:var(--ok)">${gl.spread}</span>`;
+    };
+    Utils.$$('#glX .chip').forEach(c => c.onclick = () => {
+      gl.color = c.dataset.c;
+      Utils.$('#glC').value = gl.color;
+      State.P().edits.glows.set(eid, gl);
+      Effects.applyGlLive(eid, gl);
+    });
+  },
+
+  applyElStyle(eid, prop, val){
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    if(!el) return;
+    el.style[prop] = val;
+    History.commit();
+  },
+
+  resetElStyle(eid){
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    if(!el) return;
+    el.style.cssText = '';
+    State.P().edits.backgrounds.delete(eid);
+    State.P().edits.glows.delete(eid);
+    State.P().edits.parallax.delete(eid);
+    UI.toast('✓ ریست شد');
+    History.commitNow();
+  },
+
+  effects(kind, data){
+    const p = Utils.$('#epEffects');
+    const eid = this.eidOf(kind, data);
+    if(!eid){ p.innerHTML = '<div class="noSel">افکت ممکن نیست</div>'; return; }
+    const par = State.P().edits.parallax.get(eid) || { on:false, speed:0.2, axis:'y' };
+    p.innerHTML = `
+      <div class="grp"><h4>🌊 پارالاکس دیپ</h4>
+        <div class="seg" id="pTx">
+          <button data-p="on" class="${par.on?'on':''}">روشن</button>
+          <button data-p="off" class="${!par.on?'on':''}">خاموش</button>
+        </div>
+        <div id="pX"></div>
+      </div>
+      <div class="hint">💡 پارالاکس با اسکرول صفحه، المان رو حرکت می‌ده.</div>`;
+    Utils.$$('#pTx button').forEach(b => b.onclick = () => {
+      Utils.$$('#pTx button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      par.on = b.dataset.p === 'on';
+      State.P().edits.parallax.set(eid, par);
+      this.renderParX(eid, par);
+      Effects.applyParLive(eid, par);
+    });
+    this.renderParX(eid, par);
+  },
+
+  renderParX(eid, par){
+    const box = Utils.$('#pX');
+    if(!box) return;
+    if(!par.on){ box.innerHTML = ''; return; }
+    box.innerHTML = `
+      <div class="seg" id="pAx">
+        <button data-a="y" class="${par.axis!=='x'?'on':''}">عمودی</button>
+        <button data-a="x" class="${par.axis==='x'?'on':''}">افقی</button>
+      </div>
+      <div class="ctl"><label>سرعت <span style="color:var(--ok)">${par.speed}</span></label>
+        <input type="range" id="pSp" min="-1" max="1" step="0.05" value="${par.speed}"></div>
+      <div class="chips">
+        <button class="chip" data-sp="0.05">کند</button>
+        <button class="chip" data-sp="0.2">معمولی</button>
+        <button class="chip" data-sp="0.5">سریع</button>
+        <button class="chip" data-sp="-0.3">معکوس</button>
+      </div>`;
+    Utils.$$('#pAx button').forEach(b => b.onclick = () => {
+      Utils.$$('#pAx button').forEach(x => x.classList.remove('on'));
+      b.classList.add('on');
+      par.axis = b.dataset.a;
+      State.P().edits.parallax.set(eid, par);
+      Effects.applyParLive(eid, par);
+    });
+    Utils.$('#pSp').oninput = e => {
+      par.speed = parseFloat(e.target.value);
+      e.target.previousElementSibling.innerHTML =
+        `سرعت <span style="color:var(--ok)">${par.speed}</span>`;
+      State.P().edits.parallax.set(eid, par);
+      Effects.applyParLive(eid, par);
+    };
+    Utils.$$('#pX .chip').forEach(c => c.onclick = () => {
+      par.speed = parseFloat(c.dataset.sp);
+      Utils.$('#pSp').value = par.speed;
+      State.P().edits.parallax.set(eid, par);
+      Effects.applyParLive(eid, par);
+    });
+  },
+
+  layer(kind, data){
+    const p = Utils.$('#epLayer');
+    const eid = this.eidOf(kind, data);
+    if(!eid){ p.innerHTML = '<div class="noSel">ممکن نیست</div>'; return; }
+    const pos = State.P().edits.positions.get(eid) || { dx:0, dy:0 };
+    const el = State.iframeDoc?.querySelector('[data-eid="'+eid+'"]');
+    const cs = el ? State.iframeDoc.defaultView.getComputedStyle(el) : null;
+    p.innerHTML = `
+      <div class="grp"><h4>موقعیت (جابجایی)</h4>
+        <div class="two">
+          <div class="ctl" style="grid-template-columns:20px 1fr">
+            <label>X</label>
+            <input type="number" id="posX" value="${Math.round(pos.dx)}" step="1" inputmode="numeric">
+          </div>
+          <div class="ctl" style="grid-template-columns:20px 1fr">
+            <label>Y</label>
+            <input type="number" id="posY" value="${Math.round(pos.dy)}" step="1" inputmode="numeric">
+          </div>
+        </div>
+        <div class="acts"><button id="pR">↺ برگردون</button></div>
+      </div>
+      <div class="grp"><h4>ابعاد</h4>
+        <div class="two">
+          <div class="ctl" style="grid-template-columns:20px 1fr">
+            <label>W</label>
+            <input type="number" id="szW" value="${Math.round(el?.offsetWidth||0)}" step="1">
+          </div>
+          <div class="ctl" style="grid-template-columns:20px 1fr">
+            <label>H</label>
+            <input type="number" id="szH" value="${Math.round(el?.offsetHeight||0)}" step="1">
+          </div>
+        </div>
+      </div>
+      <div class="grp"><h4>لایه</h4>
+        <div class="two">
+          <button class="btn" id="zUp">⬆ جلو</button>
+          <button class="btn" id="zDn">⬇ عقب</button>
+        </div>
+        <div class="hint">z-index فعلی: ${cs?.zIndex || 'auto'}</div>
+      </div>
+      <div class="grp"><h4>عملیات</h4>
+        <div class="two" style="margin-bottom:6px">
+          <button class="btn" id="elCp">📋 کپی</button>
+          <button class="btn blue" id="elPs">📥 پیست</button>
+        </div>
+        <div class="two">
+          <button class="btn" id="elDp">⧉ تکثیر</button>
+          <button class="btn danger" id="elDl">🗑 حذف</button>
+        </div>
+      </div>`;
+    const applyP = () => {
+      const dx = parseFloat(Utils.$('#posX').value) || 0;
+      const dy = parseFloat(Utils.$('#posY').value) || 0;
+      if(Math.abs(dx) < 1 && Math.abs(dy) < 1) State.P().edits.positions.delete(eid);
+      else State.P().edits.positions.set(eid, { dx, dy });
+      if(el) el.style.transform = (dx || dy) ? `translate(${dx}px, ${dy}px)` : '';
+      History.commit();
+    };
+    Utils.$('#posX').oninput = applyP;
+    Utils.$('#posY').oninput = applyP;
+    Utils.$('#pR').onclick = () => {
+      Utils.$('#posX').value = 0;
+      Utils.$('#posY').value = 0;
+      applyP();
+      UI.toast('✓');
+    };
+    Utils.$('#szW').oninput = e => { if(el){ el.style.width = e.target.value + 'px'; History.commit(); } };
+    Utils.$('#szH').oninput = e => { if(el){ el.style.height = e.target.value + 'px'; History.commit(); } };
+    Utils.$('#zUp').onclick = () => {
+      if(!el) return;
+      el.style.position = el.style.position || 'relative';
+      el.style.zIndex = (parseInt(el.style.zIndex) || 0) + 10;
+      History.commitNow();
+    };
+    Utils.$('#zDn').onclick = () => {
+      if(!el) return;
+      el.style.position = el.style.position || 'relative';
+      el.style.zIndex = (parseInt(el.style.zIndex) || 0) - 10;
+      History.commitNow();
+    };
+    Utils.$('#elCp').onclick = () => {
+      if(!el) return;
+      State.clip = { html: el.outerHTML };
+      UI.toast('📋 کپی — یه المان دیگه انتخاب کن و پیست بزن');
+    };
+    Utils.$('#elPs').onclick = () => {
+      if(!State.clip || !el) return;
+      const t = State.iframeDoc.createElement('div');
+      t.innerHTML = State.clip.html;
+      const cl = t.firstElementChild;
+      if(!cl){ UI.toast('❌ محتوای پیست خالیه'); return; }
+      cl.querySelectorAll('[data-eid]').forEach(x => x.removeAttribute('data-eid'));
+      cl.removeAttribute('data-eid');
+      el.parentNode.insertBefore(cl, el.nextSibling);
+      EID.assign(State.iframeDoc);
+      const nid = cl.getAttribute('data-eid');
+      const curPos = State.P().edits.positions.get(eid) || { dx:0, dy:0 };
+      const newPos = { dx: curPos.dx + 20, dy: curPos.dy + 20 };
+      if(nid){
+        State.P().edits.positions.set(nid, newPos);
+        cl.style.transform = `translate(${newPos.dx}px, ${newPos.dy}px)`;
+      }
+      Extractor.elements().then(() => {
+        if(nid) Selection.select('element', nid);
+      });
+      History.commitNow();
+      UI.toast('📥 پیست شد — ۲۰px جابجا شد');
+    };
+    Utils.$('#elDp').onclick = () => {
+      if(!el) return;
+      const cl = el.cloneNode(true);
+      cl.querySelectorAll('[data-eid]').forEach(x => x.removeAttribute('data-eid'));
+      cl.removeAttribute('data-eid');
+      el.parentNode.insertBefore(cl, el.nextSibling);
+      EID.assign(State.iframeDoc);
+      const nid = cl.getAttribute('data-eid');
+      const curPos = State.P().edits.positions.get(eid) || { dx:0, dy:0 };
+      const newPos = { dx: curPos.dx + 20, dy: curPos.dy + 20 };
+      if(nid){
+        State.P().edits.positions.set(nid, newPos);
+        cl.style.transform = `translate(${newPos.dx}px, ${newPos.dy}px)`;
+      }
+      Extractor.elements().then(() => {
+        if(nid) Selection.select('element', nid);
+      });
+      History.commitNow();
+      UI.toast('⧉ تکثیر شد — ۲۰px جابجا شد');
+    };
+    Utils.$('#elDl').onclick = () => {
+      if(!el || !confirm('حذف شه؟')) return;
+      el.remove();
+      State.P().edits.positions.delete(eid);
+      State.P().edits.backgrounds.delete(eid);
+      State.P().edits.glows.delete(eid);
+      State.P().edits.parallax.delete(eid);
+      Extractor.elements().then(() => { Sheets.close(); UI.updateUI(); });
+      History.commitNow();
+      UI.toast('🗑');
+    };
+  }
+};
+
+/* ============================================================
+   ۱۷. Color
+============================================================ */
+const Color = {
+  apply(from, to){
+    if(from === to) State.P().edits.colors.delete(from);
+    else State.P().edits.colors.set(from, to);
+    State.P().css.forEach(f => { f.content = Utils.cssColor(f.content, from, to); });
+    if(State.iframeDoc){
+      State.iframeDoc.querySelectorAll('style').forEach(st => {
+        st.textContent = Utils.cssColor(st.textContent, from, to);
+      });
+      State.iframeDoc.querySelectorAll('[style]').forEach(el => {
+        const o = el.getAttribute('style');
+        const n = Utils.cssColor(o, from, to);
+        if(n !== o) el.setAttribute('style', n);
+      });
+    }
+    History.commitNow();
+  }
+};
+
+/* ============================================================
+   ۱۸. Sheets
+============================================================ */
+const Sheets = {
+  open(id){
+    this.close();
+    Utils.$('#bd').classList.add('on');
+    Utils.$('#' + id).classList.add('on');
+    State.sheet = id;
+  },
+  close(){
+    Utils.$$('.sh').forEach(s => s.classList.remove('on'));
+    Utils.$('#bd').classList.remove('on');
+    State.sheet = null;
+  }
+};
+
+/* ============================================================
+   ۱۹. Lists
+============================================================ */
+const Lists = {
+  open(type){
+    State.sheetType = type;
+    if(type === 'export'){
+      Utils.$('#listTitle').textContent = '⬇ خروجی';
+      Utils.$('#listCount').textContent = '';
+      this.exportSheet();
+      Sheets.open('listSh');
+      return;
+    }
+    if(type === 'sections'){
+      Sections.open();
+      return;
+    }
+    const titles = {
+      texts:'📝 متن‌ها', images:'🖼 تصاویر', colors:'🎨 رنگ‌ها',
+      pages:'📄 صفحات', elements:'🎯 المان‌ها',
+    };
+    Utils.$('#listTitle').textContent = titles[type] || 'لیست';
+    if(type === 'texts') this.texts();
+    else if(type === 'images') this.images();
+    else if(type === 'colors') this.colors();
+    else if(type === 'pages') this.pages();
+    else if(type === 'elements') this.elements();
+    Sheets.open('listSh');
+  },
+
+  texts(){
+    const b = Utils.$('#listBody');
+    Utils.$('#listCount').textContent = State.texts.length;
+    if(!State.texts.length){ b.innerHTML = '<div class="noSel">متنی نیست</div>'; return; }
+    b.innerHTML = '';
+    State.texts.slice(0, 500).forEach(t => {
+      const row = document.createElement('div');
+      row.className = 'li';
+      row.innerHTML = `
+        <span class="tg">${t.node?.parentElement?.tagName.toLowerCase() || '·'}</span>
+        <div class="tx">${Utils.esc(t.cur || '(خالی)')}</div>
+        ${State.P().edits.texts.has(t.id) ? '<span class="dot">●</span>' : ''}`;
+      row.onclick = () => Selection.select('text', t.id);
+      b.appendChild(row);
+    });
+    if(State.texts.length > 500){
+      const m = document.createElement('div');
+      m.style.cssText = 'text-align:center;padding:12px;color:var(--dim);font-size:12px';
+      m.textContent = `و ${State.texts.length - 500} مورد دیگه`;
+      b.appendChild(m);
+    }
+  },
+
+  images(){
+    const b = Utils.$('#listBody');
+    Utils.$('#listCount').textContent = State.images.length;
+    if(!State.images.length){ b.innerHTML = '<div class="noSel">تصویری نیست</div>'; return; }
+    b.innerHTML = '';
+    State.images.forEach(im => {
+      const row = document.createElement('div');
+      row.className = 'li';
+      const th = document.createElement('img');
+      th.className = 'th';
+      th.src = im.cur;
+      th.loading = 'lazy';
+      th.onerror = () => { th.style.background = '#2a1a1a'; };
+      const tx = document.createElement('div');
+      tx.className = 'tx';
+      tx.textContent = im.alt || '(بدون alt)';
+      row.appendChild(th);
+      row.appendChild(tx);
+      if(State.P().edits.images.has(im.id)){
+        const d = document.createElement('span');
+        d.className = 'dot';
+        d.textContent = '●';
+        row.appendChild(d);
+      }
+      row.onclick = () => Selection.select('image', im.id);
+      b.appendChild(row);
+    });
+  },
+
+  colors(){
+    const b = Utils.$('#listBody');
+    Utils.$('#listCount').textContent = State.colors.length;
+    if(!State.colors.length){ b.innerHTML = '<div class="noSel">رنگی نیست</div>'; return; }
+    b.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'cgrid';
+    State.colors.forEach(c => {
+      const cur = State.P().edits.colors.get(c.hex) || c.hex;
+      const cell = document.createElement('div');
+      cell.className = 'cc';
+      cell.style.background = cur;
+      cell.innerHTML = `<span class="h">${Utils.esc(cur.slice(1,7))}</span>`;
+      if(State.P().edits.colors.has(c.hex)) cell.style.boxShadow = '0 0 0 2px var(--ac)';
+      cell.onclick = () => Selection.select('color', c.hex);
+      grid.appendChild(cell);
+    });
+    b.appendChild(grid);
+  },
+
+  pages(){
+    const b = Utils.$('#listBody');
+    Utils.$('#listCount').textContent = State.pages.length;
+    b.innerHTML = '';
+    State.pages.forEach((pg, i) => {
+      const row = document.createElement('div');
+      row.className = 'li' + (i === State.idx ? ' on' : '');
+      row.innerHTML = `
+        <span class="tg">${i+1}</span>
+        <div class="tx">${Utils.esc(pg.name)}${pg.html ? ' · '+Utils.fmt(pg.html.size) : ''}</div>`;
+      row.onclick = () => { Sheets.close(); Pages.switch(i); };
+      b.appendChild(row);
+    });
+    const add = document.createElement('div');
+    add.className = 'li';
+    add.style.borderColor = 'var(--ac)';
+    add.innerHTML = '<span class="tg">+</span><div class="tx" style="color:var(--ac)">صفحه جدید</div>';
+    add.onclick = () => { Sheets.close(); Pages.add(); };
+    b.appendChild(add);
+  },
+
+  elements(){
+    const b = Utils.$('#listBody');
+    Utils.$('#listCount').textContent = State.elements.length;
+    if(!State.elements.length){ b.innerHTML = '<div class="noSel">المانی نیست</div>'; return; }
+    b.innerHTML = '';
+    State.elements.slice(0, 500).forEach(el => {
+      const row = document.createElement('div');
+      row.className = 'li';
+      row.innerHTML = `
+        <span class="tg">${el.tag}</span>
+        <div class="tx">${Utils.esc(el.label || el.text || '(—)')}</div>`;
+      row.onclick = () => Selection.select('element', el.id);
+      b.appendChild(row);
+    });
+  },
+
+  exportSheet(){
+    const body = Utils.$('#listBody');
+    body.innerHTML = `
+      <div class="li" data-exp="zip-all"
+        style="border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.06)">
+        <span class="tg">📦</span>
+        <div class="tx"><b style="color:var(--ok)">ZIP همه‌ی صفحات ⭐</b>
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">
+          index.html + صفحه‌های دیگر + assets/</div></div></div>
+      <div class="li" data-exp="html-cur"><span class="tg">📄</span>
+        <div class="tx">HTML صفحه‌ی جاری
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">
+          یک فایل standalone</div></div></div>
+      <div class="li" data-exp="zip-cur"><span class="tg">🗜</span>
+        <div class="tx">ZIP صفحه‌ی جاری
+        <div style="font-size:11px;color:var(--dim);margin-top:2px">
+          index.html + assets/</div></div></div>`;
+    body.querySelectorAll('.li').forEach(o => {
+      o.onclick = () => { Sheets.close(); Export.do(o.dataset.exp); };
+    });
+  }
+};
+
+/* ============================================================
+   ۲۰. Pages
+============================================================ */
+const Pages = {
+  switch(i){
+    if(i === State.idx) return;
+    State.idx = i;
+    State.iframeDoc = null;
+    State.texts = []; State.images = []; State.colors = []; State.elements = [];
+    State.sel = { kind:null, id:null };
+    History.clear();
+    try { Utils.$('#pv').src = 'about:blank'; } catch {}
+    Utils.$('#pv').style.display = 'block';
+    Utils.$('#empty').style.display = State.P().html ? 'none' : 'flex';
+    this.renderBar();
+    UI.updateUI();
+    Preview.rebuild();
+    UI.toast(`📄 ${State.P().name}`);
+  },
+
+  add(){
+    const n = prompt('نام صفحه:', 'صفحه ' + (State.pages.length + 1));
+    if(!n) return;
+    State.pages.push(State.newPage(n));
+    State.idx = State.pages.length - 1;
+    this.switch(State.idx);
+  },
+
+  del(i){
+    if(State.pages.length <= 1){ UI.toast('حداقل یه صفحه'); return; }
+    if(!confirm(`حذف «${State.pages[i].name}»؟`)) return;
+    State.pages.splice(i, 1);
+    if(State.idx >= State.pages.length) State.idx = State.pages.length - 1;
+    this.switch(State.idx);
+  },
+
+  renderBar(){
+    const bar = Utils.$('#pagebar');
+    bar.classList.toggle('show', State.pages.length > 0);
+    bar.innerHTML = '';
+    State.pages.forEach((pg, i) => {
+      const t = document.createElement('div');
+      t.className = 'pt' + (i === State.idx ? ' on' : '');
+      t.innerHTML = `<span>${Utils.esc(pg.name)}</span>`;
+      if(State.pages.length > 1){
+        const x = document.createElement('span');
+        x.className = 'x';
+        x.textContent = '✕';
+        x.onclick = e => { e.stopPropagation(); this.del(i); };
+        t.appendChild(x);
+      }
+      t.onclick = () => this.switch(i);
+      bar.appendChild(t);
+    });
+    const a = document.createElement('button');
+    a.className = 'padd';
+    a.textContent = '+';
+    a.onclick = () => this.add();
+    bar.appendChild(a);
+  }
+};
+
+/* ============================================================
+   ۲۱. Media
+============================================================ */
+const Media = {
+  pick(accept, cb){
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = accept;
+    inp.style.cssText = 'position:absolute;width:1px;height:1px;opacity:.01;';
+    document.body.appendChild(inp);
+    inp.onchange = () => {
+      const f = inp.files?.[0];
+      if(f){
+        const R = new FileReader();
+        R.onload = () => cb(R.result);
+        R.readAsDataURL(f);
+      }
+      inp.remove();
+    };
+    inp.click();
+  }
+};
+
+/* ============================================================
+   ۲۲. FileIO
+============================================================ */
+const FileIO = {
+  readTxt(f){
+    return new Promise((r,j) => {
+      const R = new FileReader();
+      R.onload = () => r(R.result);
+      R.onerror = j;
+      R.readAsText(f);
+    });
+  },
+  readAB(f){
+    return new Promise((r,j) => {
+      const R = new FileReader();
+      R.onload = () => r(R.result);
+      R.onerror = j;
+      R.readAsArrayBuffer(f);
+    });
+  },
+
+  async addFiles(files){
+    UI.showL('در حال خواندن...', 5);
+    try {
+      const zips = files.filter(f => f.name.toLowerCase().endsWith('.zip'));
+      const rest = files.filter(f => !f.name.toLowerCase().endsWith('.zip'));
+      if(zips.length){
+        for(const z of zips){
+          const pg = State.newPage(z.name.replace(/\.zip$/i,''));
+          await this.handleZip(z, pg);
+          if(!State.P().html){
+            Object.assign(State.P(), pg);
+          } else {
+            State.pages.push(pg);
+            State.idx = State.pages.length - 1;
+          }
+        }
+      }
+      let i = 0;
+      for(const f of rest){
+        i++;
+        UI.showL(`خواندن ${f.name}...`, Math.round(i/rest.length*30));
+        await Utils.yieldUI();
+        const n = f.name.toLowerCase();
+        const c = await this.readTxt(f);
+        if(n.endsWith('.html') || n.endsWith('.htm')){
+          State.P().html = { name:f.name, content:c, size:f.size };
+        } else if(n.endsWith('.css')){
+          if(!State.P().css.find(x => x.name === f.name))
+            State.P().css.push({ name:f.name, content:c, size:f.size });
+        } else if(n.endsWith('.js') || n.endsWith('.mjs')){
+          if(!State.P().js.find(x => x.name === f.name))
+            State.P().js.push({ name:f.name, content:c, size:f.size });
+        }
+      }
+      if(!State.P().html){ UI.hideL(); UI.toast('⚠️ فایل HTML یا ZIP بده'); return; }
+      await Preview.rebuild();
+      UI.hideL();
+      Pages.renderBar();
+      UI.toast(`✅ ${State.texts.length}م · ${State.images.length}ع · ${State.colors.length}ر`, 3000);
+    } catch(e){
+      UI.hideL();
+      console.error(e);
+      UI.toast('❌ ' + e.message, 3500);
+    }
+  },
+
+  async handleZip(file, pg){
+    if(!window.JSZip){ UI.toast('❌ ZIP نیاز به JSZip'); return; }
+    UI.showL('باز کردن ZIP...', 10);
+    const ab = await this.readAB(file);
+    const zip = await JSZip.loadAsync(ab);
+    const names = Object.keys(zip.files);
+    let i = 0;
+    for(const n of names){
+      const en = zip.files[n];
+      if(en.dir) continue;
+      const ln = n.toLowerCase();
+      if(!/\.(html|htm|css|js|mjs)$/.test(ln)) continue;
+      i++;
+      if(i % 5 === 0){
+        UI.showL(`استخراج ${n}...`, 10 + Math.round(i/names.length*40));
+        await Utils.yieldUI();
+      }
+      const c = await en.async('string');
+      if(ln.endsWith('.html') || ln.endsWith('.htm')){
+        if(!pg.html || ln.endsWith('index.html'))
+          pg.html = { name:n, content:c, size:c.length };
+      } else if(ln.endsWith('.css')){
+        if(!pg.css.find(x => x.name === n))
+          pg.css.push({ name:n, content:c, size:c.length });
+      } else if(ln.endsWith('.js') || ln.endsWith('.mjs')){
+        if(!pg.js.find(x => x.name === n))
+          pg.js.push({ name:n, content:c, size:c.length });
+      }
+    }
+  },
+
+  async loadProject(f){
+    UI.showL('بارگذاری...', 20);
+    try {
+      const t = await this.readTxt(f);
+      const d = JSON.parse(t);
+      if(!d.pages) throw new Error('فرمت اشتباه');
+      State.pages = d.pages.map(p => {
+        const pg = State.newPage(p.name);
+        pg.id = p.id || pg.id;
+        pg.html = p.html ? { ...p.html, size:(p.html.content||'').length } : null;
+        pg.css = (p.css||[]).map(x => ({ ...x, size:(x.content||'').length }));
+        pg.js  = (p.js||[]).map(x => ({ ...x, size:(x.content||'').length }));
+        const e = p.edits || {};
+        pg.edits.texts       = new Map(e.texts || []);
+        pg.edits.images      = new Map(e.images || []);
+        pg.edits.colors      = new Map(e.colors || []);
+        pg.edits.positions   = new Map(e.positions || []);
+        pg.edits.backgrounds = new Map(e.backgrounds || []);
+        pg.edits.glows       = new Map(e.glows || []);
+        pg.edits.parallax    = new Map(e.parallax || []);
+        return pg;
+      });
+      State.idx = Math.min(d.idx || 0, State.pages.length - 1);
+      Pages.renderBar();
+      await Preview.rebuild();
+      UI.hideL();
+      UI.toast(`📥 ${State.pages.length} صفحه`);
+    } catch(e){
+      UI.hideL();
+      UI.toast('❌ ' + e.message);
+    }
+  }
+};
+
+/* ============================================================
+   ۲۳. Sections
+============================================================ */
+const Sections = {
+  builtin: [
+    {
+      id: '_blank',
+      name: 'سکشن خالی',
+      icon: '⬜',
+      html: `<section class="sp-section" style="padding:80px 40px;">
+        <h2 style="text-align:center;font-size:32px;margin:0 0 24px;">عنوان سکشن</h2>
+        <p style="text-align:center;opacity:.7;max-width:600px;margin:auto;">متن نمونه.</p>
+      </section>`,
+    },
+    {
+      id: '_hero',
+      name: 'هیرو ساده',
+      icon: '🎯',
+      html: `<section class="sp-section" style="padding:100px 40px;text-align:center;background:linear-gradient(135deg,#0a0a1a,#1a0a2a);color:#fff;">
+        <h1 style="font-size:48px;margin:0 0 20px;font-weight:800;line-height:1.2;">عنوان جذاب شما</h1>
+        <p style="font-size:18px;margin:0 auto 32px;max-width:600px;opacity:.85;line-height:1.7;">توضیح کوتاه.</p>
+        <a href="#contact" style="display:inline-block;padding:16px 36px;background:linear-gradient(135deg,#3b9eff,#7c5cff);color:#fff;text-decoration:none;border-radius:12px;font-weight:700;">شروع کنید</a>
+      </section>`,
+    },
+    {
+      id: '_features',
+      name: 'سه ویژگی',
+      icon: '⭐',
+      html: `<section class="sp-section" style="padding:80px 40px;background:#0f1220;color:#fff;">
+        <h2 style="text-align:center;font-size:36px;margin:0 0 50px;">ویژگی‌ها</h2>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:24px;max-width:1100px;margin:auto;">
+          <div style="padding:32px;background:rgba(255,255,255,.04);border-radius:16px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:16px;">🚀</div>
+            <h3 style="font-size:20px;margin:0 0 12px;">سریع</h3>
+            <p style="opacity:.75;line-height:1.7;margin:0;">توضیح کوتاه.</p>
+          </div>
+          <div style="padding:32px;background:rgba(255,255,255,.04);border-radius:16px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:16px;">💎</div>
+            <h3 style="font-size:20px;margin:0 0 12px;">کیفیت</h3>
+            <p style="opacity:.75;line-height:1.7;margin:0;">توضیح کوتاه.</p>
+          </div>
+          <div style="padding:32px;background:rgba(255,255,255,.04);border-radius:16px;text-align:center;">
+            <div style="font-size:40px;margin-bottom:16px;">🎯</div>
+            <h3 style="font-size:20px;margin:0 0 12px;">دقت</h3>
+            <p style="opacity:.75;line-height:1.7;margin:0;">توضیح کوتاه.</p>
+          </div>
+        </div>
+      </section>`,
+    },
+    {
+      id: '_cta',
+      name: 'دعوت به اقدام',
+      icon: '📢',
+      html: `<section class="sp-section" style="padding:80px 40px;text-align:center;background:linear-gradient(135deg,#3b9eff,#7c5cff);color:#fff;">
+        <h2 style="font-size:42px;margin:0 0 20px;font-weight:800;">آماده‌اید شروع کنید؟</h2>
+        <p style="font-size:18px;margin:0 auto 32px;max-width:520px;opacity:.9;">همین امروز شروع کنید.</p>
+        <a href="#contact" style="display:inline-block;padding:16px 40px;background:#fff;color:#0a0a1a;text-decoration:none;border-radius:12px;font-weight:700;">تماس با ما</a>
+      </section>`,
+    },
+  ],
+
+  custom: [],
+  STORAGE_KEY: 'pro_editor_sections_v2',
+  currentTab: 'custom',
+  searchQuery: '',
+  editingId: null,
+
+  loadCustom(){
+    try {
+      const raw = localStorage.getItem(this.STORAGE_KEY);
+      if(!raw) return;
+      const arr = JSON.parse(raw);
+      if(Array.isArray(arr)) this.custom = arr;
+    } catch(e){ console.warn('sections load error', e); }
+  },
+
+  saveCustom(){
+    try {
+      const light = this.custom.map(s => ({
+        id: s.id, name: s.name, html: s.html, icon: s.icon, addedAt: s.addedAt,
+      }));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(light));
+    } catch(e){
+      UI.toast('⚠️ حافظه پر شده — از Export JSON استفاده کن', 3500);
+      console.warn('sections save error', e);
+    }
+  },
+
+  async addFromFiles(files){
+    let added = 0;
+    for(const f of files){
+      try {
+        if(!/\.(html?|htm)$/i.test(f.name)) continue;
+        const txt = await FileIO.readTxt(f);
+        const name = f.name.replace(/\.(html?|htm)$/i, '').replace(/[-_]/g, ' ');
+        const tmp = document.createElement('div');
+        tmp.innerHTML = txt.trim();
+        const root = tmp.firstElementChild;
+        if(!root) continue;
+        const icon = this.guessIcon(root);
+        this.custom.push({
+          id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+          name,
+          html: txt.trim(),
+          icon,
+          addedAt: Date.now(),
+        });
+        added++;
+      } catch(e){
+        console.warn('skip:', f.name, e);
+      }
+    }
+    if(added){
+      this.saveCustom();
+      UI.toast(`✅ ${added} پریست اضافه شد`);
+      this.open();
+    } else {
+      UI.toast('❌ فایل HTML معتبری پیدا نشد');
+    }
+  },
+
+  async addFromFolder(files){
+    const htmlFiles = files.filter(f => /\.(html?|htm)$/i.test(f.name));
+    if(!htmlFiles.length){
+      UI.toast('❌ توی پوشه HTML نبود');
+      return;
+    }
+    await this.addFromFiles(htmlFiles);
+  },
+
+  exportJSON(){
+    if(!this.custom.length){
+      UI.toast('⚠️ پریست سفارشی نداری');
+      return;
+    }
+    const data = {
+      _meta: {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        count: this.custom.length,
+        app: 'PRO Editor',
+      },
+      presets: this.custom.map(s => ({
+        id: s.id, name: s.name, html: s.html, icon: s.icon, addedAt: s.addedAt,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `presets-${Date.now()}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 3000);
+    UI.toast(`💾 ${this.custom.length} پریست ذخیره شد`);
+  },
+
+  async importJSON(file){
+    try {
+      const txt = await FileIO.readTxt(file);
+      const data = JSON.parse(txt);
+      let presets = null;
+      if(Array.isArray(data)) presets = data;
+      else if(data.presets && Array.isArray(data.presets)) presets = data.presets;
+      else if(data.items && Array.isArray(data.items)) presets = data.items;
+
+      if(!presets || !presets.length){
+        UI.toast('❌ فرمت JSON اشتباه');
+        return;
+      }
+
+      let added = 0, skipped = 0;
+      for(const p of presets){
+        if(!p.html || typeof p.html !== 'string'){ skipped++; continue; }
+        const newId = this.custom.find(x => x.id === p.id)
+          ? 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,5)
+          : (p.id || 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,5));
+        this.custom.push({
+          id: newId,
+          name: p.name || 'بدون نام',
+          html: p.html,
+          icon: p.icon || '📄',
+          addedAt: p.addedAt || Date.now(),
+        });
+        added++;
+      }
+      this.saveCustom();
+      UI.toast(`✅ ${added} اضافه${skipped ? ` · ${skipped} نامعتبر` : ''}`);
+      this.open();
+    } catch(e){
+      console.error(e);
+      UI.toast('❌ خطا در خواندن JSON');
+    }
+  },
+
+  guessIcon(el){
+    if(!el) return '📄';
+    const tag = el.tagName?.toLowerCase() || '';
+    if(tag === 'footer') return '⬛';
+    if(tag === 'header') return '🔝';
+    if(tag === 'nav') return '🧭';
+    if(tag === 'form') return '📝';
+    if(tag === 'table') return '📊';
+    if(el.querySelector?.('h1')) return '🎯';
+    if(el.querySelector?.('img')) return '🖼';
+    if(el.querySelector?.('button,a')) return '📢';
+    if(el.querySelector?.('ul,ol')) return '📋';
+    return '📄';
+  },
+
+  edit(id){
+    const p = this.custom.find(s => s.id === id);
+    if(!p){ UI.toast('❌ پیدا نشد'); return; }
+    this.editingId = id;
+    Utils.$('#secEditName').value = p.name;
+    Utils.$('#secEditHtml').value = p.html;
+    Sheets.open('secEditSh');
+    setTimeout(() => { try { Utils.$('#secEditName').focus(); } catch {} }, 250);
+  },
+
+  saveEdit(){
+    const id = this.editingId;
+    if(!id) return;
+    const p = this.custom.find(s => s.id === id);
+    if(!p) return;
+    const newName = Utils.$('#secEditName').value.trim();
+    const newHtml = Utils.$('#secEditHtml').value.trim();
+    if(!newHtml){
+      UI.toast('⚠️ HTML خالیه');
+      return;
+    }
+    p.name = newName || p.name;
+    p.html = newHtml;
+    const tmp = document.createElement('div');
+    tmp.innerHTML = newHtml;
+    p.icon = this.guessIcon(tmp.firstElementChild);
+    this.saveCustom();
+    this.editingId = null;
+    Sheets.close();
+    UI.toast('✓ ذخیره شد');
+    setTimeout(() => this.open(), 100);
+  },
+
+  duplicate(id){
+    const p = this.custom.find(s => s.id === id);
+    if(!p) return;
+    this.custom.push({
+      id: 'c_' + Date.now() + '_' + Math.random().toString(36).slice(2,5),
+      name: p.name + ' (کپی)',
+      html: p.html,
+      icon: p.icon,
+      addedAt: Date.now(),
+    });
+    this.saveCustom();
+    UI.toast('⧉ تکثیر شد');
+    this.open();
+  },
+
+  rename(id){
+    const p = this.custom.find(s => s.id === id);
+    if(!p) return;
+    const n = prompt('نام جدید:', p.name);
+    if(!n || n === p.name) return;
+    p.name = n;
+    this.saveCustom();
+    UI.toast('✓ تغییر کرد');
+    this.open();
+  },
+
+  remove(id){
+    const p = this.custom.find(s => s.id === id);
+    if(!p) return;
+    if(!confirm(`«${p.name}» حذف بشه؟`)) return;
+    this.custom = this.custom.filter(s => s.id !== id);
+    this.saveCustom();
+    UI.toast('🗑 حذف شد');
+    this.open();
+  },
+
+  clearAll(){
+    if(!this.custom.length){ UI.toast('پریستی نیست'); return; }
+    if(!confirm(`همه‌ی ${this.custom.length} پریست حذف بشن؟`)) return;
+    this.custom = [];
+    this.saveCustom();
+    UI.toast('🗑 همه پاک شد');
+    this.open();
+  },
+
+  findFooter(){
+    const doc = State.iframeDoc;
+    if(!doc) return null;
+    const f1 = doc.querySelector('footer');
+    if(f1) return f1;
+    const f2 = doc.querySelector('[class*="footer" i],[id*="footer" i]');
+    if(f2) return f2;
+    const kids = [...doc.body.children].filter(k =>
+      !['SCRIPT','STYLE','NOSCRIPT','LINK','META'].includes(k.tagName)
+    );
+    return kids.length ? kids[kids.length - 1] : null;
+  },
+
+  insert(id){
+    const doc = State.iframeDoc;
+    if(!doc){ UI.toast('⚠️ اول یه سایت ایمپورت کن'); return; }
+    const preset = this.builtin.find(p => p.id === id) ||
+                   this.custom.find(p => p.id === id);
+    if(!preset){ UI.toast('❌ پریست پیدا نشد'); return; }
+    const tmp = doc.createElement('div');
+    tmp.innerHTML = preset.html;
+    const sec = tmp.firstElementChild;
+    if(!sec){ UI.toast('❌ HTML خالی'); return; }
+    const footer = this.findFooter();
+    if(footer && footer.parentNode){
+      footer.parentNode.insertBefore(sec, footer);
+    } else {
+      doc.body.appendChild(sec);
+    }
+    EID.assign(doc);
+    Extractor.elements().then(() => {
+      const newEid = sec.getAttribute('data-eid');
+      if(newEid) Selection.select('element', newEid);
+      UI.updateUI();
+    });
+    History.commitNow();
+    UI.toast(`✅ «${preset.name}» اضافه شد`);
+  },
+
+  openCardMenu(cardEl, id){
+    Utils.$$('.sec-menu').forEach(m => m.remove());
+    const menu = document.createElement('div');
+    menu.className = 'sec-menu';
+    menu.innerHTML = `
+      <button data-act="edit">✏️ ویرایش</button>
+      <button data-act="rename">🏷 تغییر نام</button>
+      <button data-act="dup" class="blue">⧉ تکثیر</button>
+      <button data-act="export-one" class="blue">📤 ذخیره این یکی</button>
+      <button data-act="del" class="danger">🗑 حذف</button>`;
+    const r = cardEl.getBoundingClientRect();
+    menu.style.top = (r.bottom + 4) + 'px';
+    menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 170)) + 'px';
+    document.body.appendChild(menu);
+    requestAnimationFrame(() => {
+      const mr = menu.getBoundingClientRect();
+      if(mr.bottom > innerHeight - 8){
+        menu.style.top = (r.top - mr.height - 4) + 'px';
+      }
+    });
+    menu.querySelectorAll('button').forEach(b => {
+      b.onclick = ev => {
+        ev.stopPropagation();
+        menu.remove();
+        const act = b.dataset.act;
+        if(act === 'edit') this.edit(id);
+        else if(act === 'rename') this.rename(id);
+        else if(act === 'dup') this.duplicate(id);
+        else if(act === 'del') this.remove(id);
+        else if(act === 'export-one') this.exportOne(id);
+      };
+    });
+    setTimeout(() => {
+      const close = ev => {
+        if(!menu.contains(ev.target)){ menu.remove(); document.removeEventListener('click', close, true); }
+      };
+      document.addEventListener('click', close, true);
+    }, 50);
+  },
+
+  exportOne(id){
+    const p = this.custom.find(s => s.id === id);
+    if(!p){ UI.toast('❌ پیدا نشد'); return; }
+    const data = {
+      _meta: { version:1, exportedAt:new Date().toISOString(), count:1 },
+      presets: [{ id:p.id, name:p.name, html:p.html, icon:p.icon, addedAt:p.addedAt }],
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type:'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `preset-${p.name.replace(/\s+/g,'-')}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 3000);
+    UI.toast(`📤 ذخیره شد`);
+  },
+
+  renderGrid(which, query){
+    const grid = Utils.$('#secGrid');
+    if(!grid) return;
+    grid.innerHTML = '';
+    let list = which === 'builtin' ? this.builtin : this.custom;
+    if(query){
+      const q = query.toLowerCase();
+      list = list.filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        (p.html || '').toLowerCase().includes(q)
+      );
+    }
+    if(!list.length){
+      grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;
+        padding:30px 16px;color:var(--dim);font-size:12.5px;line-height:1.9;">
+        ${query ? 'چیزی پیدا نشد' :
+          (which === 'custom'
+            ? 'هنوز پریست سفارشی نداری.<br>روی «افزودن از فایل» بزن.'
+            : 'پریست داخلی نیست.')}
+      </div>`;
+      return;
+    }
+    list.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'sec-card';
+      const thumb = document.createElement('div');
+      thumb.className = 'thumb';
+      thumb.textContent = p.icon || '📄';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = p.name;
+      card.appendChild(thumb);
+      card.appendChild(name);
+      if(which === 'custom'){
+        const menuBtn = document.createElement('button');
+        menuBtn.className = 'menu-btn';
+        menuBtn.textContent = '⋯';
+        menuBtn.onclick = e => {
+          e.stopPropagation();
+          this.openCardMenu(card, p.id);
+        };
+        card.appendChild(menuBtn);
+      }
+      card.onclick = () => { Sheets.close(); this.insert(p.id); };
+      grid.appendChild(card);
+    });
+  },
+
+  open(){
+    if(!State.iframeDoc){
+      UI.toast('⚠️ اول یه سایت ایمپورت کن');
+      return;
+    }
+    const body = Utils.$('#listBody');
+    Utils.$('#listTitle').textContent = '➕ افزودن سکشن';
+    Utils.$('#listCount').textContent = this.builtin.length + this.custom.length;
+    body.innerHTML = '';
+
+    const acts = document.createElement('div');
+    acts.className = 'sec-actions';
+    acts.innerHTML = `
+      <button class="pri" id="secImportFile">📁 افزودن از فایل</button>
+      <button id="secImportFolder">📂 از پوشه</button>
+      <button id="secImportJson">📥 ایمپورت JSON</button>
+      <button id="secExportJson">📤 اکسپورت JSON</button>
+    `;
+    body.appendChild(acts);
+
+    const search = document.createElement('input');
+    search.type = 'search';
+    search.className = 'sec-search';
+    search.placeholder = '🔍 جستجو در نام یا محتوا...';
+    search.value = this.searchQuery;
+    body.appendChild(search);
+
+    const tabs = document.createElement('div');
+    tabs.className = 'sec-tabs';
+    tabs.innerHTML = `
+      <button data-tab="custom" class="${this.currentTab==='custom'?'on':''}">سفارشی (${this.custom.length})</button>
+      <button data-tab="builtin" class="${this.currentTab==='builtin'?'on':''}">داخلی (${this.builtin.length})</button>
+    `;
+    body.appendChild(tabs);
+
+    const clearRow = document.createElement('div');
+    clearRow.style.cssText = 'display:flex;justify-content:flex-end;margin-bottom:8px';
+    if(this.currentTab === 'custom' && this.custom.length){
+      const clr = document.createElement('button');
+      clr.textContent = '🗑 پاک کردن همه';
+      clr.style.cssText = 'padding:6px 12px;border-radius:7px;border:1px solid var(--bd);'
+        + 'background:var(--panel2);color:var(--danger);font-size:11.5px;font-weight:700';
+      clr.onclick = () => this.clearAll();
+      clearRow.appendChild(clr);
+    }
+    body.appendChild(clearRow);
+
+    const grid = document.createElement('div');
+    grid.className = 'sec-grid';
+    grid.id = 'secGrid';
+    body.appendChild(grid);
+
+    this.renderGrid(this.currentTab, this.searchQuery);
+
+    search.oninput = () => {
+      this.searchQuery = search.value;
+      this.renderGrid(this.currentTab, this.searchQuery);
+    };
+
+    tabs.querySelectorAll('button').forEach(b => {
+      b.onclick = () => {
+        tabs.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+        b.classList.add('on');
+        this.currentTab = b.dataset.tab;
+        this.open();
+      };
+    });
+
+    acts.querySelector('#secImportFile').onclick = () => {
+      Utils.$('#sectionFileInput').value = '';
+      Utils.$('#sectionFileInput').click();
+    };
+    acts.querySelector('#secImportFolder').onclick = () => {
+      Utils.$('#sectionFolderInput').value = '';
+      Utils.$('#sectionFolderInput').click();
+    };
+    acts.querySelector('#secImportJson').onclick = () => {
+      Utils.$('#sectionJsonInput').value = '';
+      Utils.$('#sectionJsonInput').click();
+    };
+    acts.querySelector('#secExportJson').onclick = () => this.exportJSON();
+
+    Sheets.open('listSh');
+  },
+
+  init(){
+    this.loadCustom();
+  },
+};
+
+/* ============================================================
+   ۲۴. Export
+============================================================ */
+const Export = {
+  miniZip(files){
+    const enc = new TextEncoder();
+    const T = new Uint32Array(256);
+    for(let n=0;n<256;n++){
+      let c=n;
+      for(let k=0;k<8;k++) c = c&1 ? 0xEDB88320^(c>>>1) : c>>>1;
+      T[n]=c>>>0;
+    }
+    const crc = d => {
+      let c=0xFFFFFFFF;
+      for(let i=0;i<d.length;i++) c = T[(c^d[i])&0xFF]^(c>>>8);
+      return (c^0xFFFFFFFF)>>>0;
+    };
+    const lc=[], cc=[];
+    let off=0;
+    for(const f of files){
+      const d = enc.encode(f.content), nb = enc.encode(f.name), c = crc(d);
+      const lh = new Uint8Array(30+nb.length);
+      const lv = new DataView(lh.buffer);
+      lv.setUint32(0,0x04034b50,true); lv.setUint16(4,20,true);
+      lv.setUint16(6,0,true); lv.setUint16(8,0,true);
+      lv.setUint16(10,0,true); lv.setUint16(12,0,true);
+      lv.setUint32(14,c,true); lv.setUint32(18,d.length,true);
+      lv.setUint32(22,d.length,true); lv.setUint16(26,nb.length,true);
+      lv.setUint16(28,0,true);
+      lh.set(nb,30);
+      lc.push(lh,d);
+      const ch = new Uint8Array(46+nb.length);
+      const cv = new DataView(ch.buffer);
+      cv.setUint32(0,0x02014b50,true); cv.setUint16(4,20,true);
+      cv.setUint16(6,20,true); cv.setUint16(8,0,true);
+      cv.setUint16(10,0,true); cv.setUint16(12,0,true);
+      cv.setUint16(14,0,true); cv.setUint32(16,c,true);
+      cv.setUint32(20,d.length,true); cv.setUint32(24,d.length,true);
+      cv.setUint16(28,nb.length,true); cv.setUint16(30,0,true);
+      cv.setUint16(32,0,true); cv.setUint16(34,0,true);
+      cv.setUint16(36,0,true); cv.setUint32(38,0,true);
+      cv.setUint32(42,off,true);
+      ch.set(nb,46);
+      cc.push(ch);
+      off += lh.length + d.length;
+    }
+    const cs = cc.reduce((s,c) => s+c.length, 0);
+    const eo = new Uint8Array(22);
+    const ev = new DataView(eo.buffer);
+    ev.setUint32(0,0x06054b50,true); ev.setUint16(4,0,true);
+    ev.setUint16(6,0,true); ev.setUint16(8,cc.length,true);
+    ev.setUint16(10,cc.length,true); ev.setUint32(12,cs,true);
+    ev.setUint32(16,off,true); ev.setUint16(20,0,true);
+    return new Blob([...lc, ...cc, eo], { type:'application/zip' });
+  },
+
+  buildPage(pg, mode){
+    if(!pg.html) return null;
+    const doc = new DOMParser().parseFromString(pg.html.content, 'text/html');
+    EID.assign(doc);
+    pg.edits.backgrounds.forEach((bg, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(el) Effects.applyBG(el, bg);
+    });
+    pg.edits.glows.forEach((g, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(!el) return;
+      if(g.on){
+        el.style.boxShadow = (el.style.boxShadow ? el.style.boxShadow + ', ' : '') +
+          `0 0 ${g.blur}px ${g.spread}px ${g.color}`;
+      }
+    });
+    pg.edits.parallax.forEach((p, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(el && p.on) el.setAttribute('data-parallax', JSON.stringify(p));
+    });
+    pg.edits.positions.forEach((p, eid) => {
+      const el = doc.querySelector('[data-eid="'+eid+'"]');
+      if(el) el.style.transform = `translate(${p.dx}px, ${p.dy}px)`;
+    });
+    doc.querySelectorAll('[data-eid]').forEach(el => el.removeAttribute('data-eid'));
+    doc.querySelectorAll('.__sp_bgvid__').forEach(v => v.remove());
+    let inlineCss = pg.css.map(f => `/* === ${f.name} === */\n${f.content}`).join('\n\n');
+    pg.edits.colors.forEach((to, from) => { inlineCss = Utils.cssColor(inlineCss, from, to); });
+    doc.querySelectorAll('link[rel="stylesheet"]').forEach(l => {
+      const h = l.getAttribute('href') || '';
+      if(!/^(https?:)?\/\//.test(h)) l.remove();
+    });
+    doc.querySelectorAll('script[src]').forEach(s => {
+      const h = s.getAttribute('src') || '';
+      if(!/^(https?:)?\/\//.test(h)) s.remove();
+    });
+    const slug = (pg.name || 'page').replace(/\s+/g,'-').toLowerCase();
+    const extraFiles = {};
+    const fileName = State.pages.indexOf(pg) === 0 ? 'index.html' : slug + '.html';
+    if(mode === 'html'){
+      const st = doc.createElement('style');
+      st.textContent = inlineCss;
+      doc.head.appendChild(st);
+      if(pg.js.length){
+        const sc = doc.createElement('script');
+        sc.textContent = pg.js.map(f => `// === ${f.name} ===\n${f.content}`).join('\n\n');
+        doc.body.appendChild(sc);
+      }
+      const ps = doc.createElement('script');
+      ps.textContent = Effects.PAR_SCRIPT;
+      doc.body.appendChild(ps);
+    } else {
+      const link = doc.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = 'assets/' + slug + '.css';
+      doc.head.appendChild(link);
+      extraFiles['assets/' + slug + '.css'] = inlineCss;
+      if(pg.js.length){
+        const sc = doc.createElement('script');
+        sc.src = 'assets/' + slug + '.js';
+        doc.body.appendChild(sc);
+        extraFiles['assets/' + slug + '.js'] =
+          pg.js.map(f => `/* === ${f.name} === */\n${f.content}`).join('\n\n');
+      }
+      const ps = doc.createElement('script');
+      ps.textContent = Effects.PAR_SCRIPT;
+      doc.body.appendChild(ps);
+    }
+    return {
+      html: '<!DOCTYPE html>\n' + doc.documentElement.outerHTML,
+      extraFiles,
+      fileName,
+    };
+  },
+
+  async do(mode){
+    if(!State.P().html){ UI.toast('اول فایل بده'); return; }
+    UI.showL('ساخت خروجی...', 20);
+    try {
+      await Utils.yieldUI();
+      if(mode === 'html-cur'){
+        const o = this.buildPage(State.P(), 'html');
+        const b = new Blob([o.html], { type:'text/html;charset=utf-8' });
+        this.downloadBlob(b, 'index.html');
+        UI.hideL();
+        UI.toast('✅ index.html');
+        return;
+      }
+      if(mode === 'zip-cur'){
+        const o = this.buildPage(State.P(), 'zip');
+        const files = [{ name:'index.html', content:o.html }];
+        for(const [n,c] of Object.entries(o.extraFiles)) files.push({ name:n, content:c });
+        await this.downloadZip(files, 'site-export.zip');
+        UI.hideL();
+        UI.toast('✅ ZIP');
+        return;
+      }
+      if(mode === 'zip-all'){
+        const files = [];
+        const seen = new Set();
+        for(let i = 0; i < State.pages.length; i++){
+          const pg = State.pages[i];
+          if(!pg.html) continue;
+          const o = this.buildPage(pg, 'zip');
+          const name = i === 0 ? 'index.html' : (o.fileName || ('page-' + i + '.html'));
+          if(seen.has(name)) continue;
+          seen.add(name);
+          files.push({ name, content:o.html });
+          for(const [n,c] of Object.entries(o.extraFiles)) files.push({ name:n, content:c });
+        }
+        if(!files.length){ UI.hideL(); UI.toast('❌ صفحه‌ای نیست'); return; }
+        await this.downloadZip(files, 'site-all.zip');
+        UI.hideL();
+        UI.toast(`✅ ZIP ${State.pages.length} صفحه`);
+      }
+    } catch(e){
+      UI.hideL();
+      console.error(e);
+      UI.toast('❌ ' + e.message);
+    }
+  },
+
+  async downloadZip(files, name){
+    let b;
+    if(State.jszip && window.JSZip){
+      const zip = new JSZip();
+      files.forEach(f => zip.file(f.name, f.content));
+      b = await zip.generateAsync({ type:'blob' });
+    } else {
+      b = this.miniZip(files);
+    }
+    this.downloadBlob(b, name);
+  },
+
+  downloadBlob(b, name){
+    const u = URL.createObjectURL(b);
+    const a = document.createElement('a');
+    a.href = u;
+    a.download = name;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { a.remove(); URL.revokeObjectURL(u); }, 4000);
+  },
+
+  saveProject(){
+    const d = {
+      _meta: { savedAt: new Date().toISOString(), v:1 },
+      idx: State.idx,
+      pages: State.pages.map(p => ({
+        id: p.id,
+        name: p.name,
+        html: p.html ? { name:p.html.name, content:p.html.content } : null,
+        css: p.css.map(f => ({ name:f.name, content:f.content })),
+        js: p.js.map(f => ({ name:f.name, content:f.content })),
+        edits: {
+          texts: [...p.edits.texts],
+          images: [...p.edits.images],
+          colors: [...p.edits.colors],
+          positions: [...p.edits.positions],
+          backgrounds: [...p.edits.backgrounds],
+          glows: [...p.edits.glows],
+          parallax: [...p.edits.parallax],
+        },
+      })),
+    };
+    const b = new Blob([JSON.stringify(d)], { type:'application/json' });
+    this.downloadBlob(b, 'project.json');
+    UI.toast('💾 پروژه ذخیره شد');
+  }
+};
+
+/* ============================================================
+   ۲۵. Menu
+============================================================ */
+const Menu = {
+  open(){
+    const body = Utils.$('#menuBody');
+    body.innerHTML = `
+      <div class="li" id="mRunJs"><span class="tg">⚙️</span>
+        <div class="tx">اجرای JavaScript · ${State.runJs ? 'روشن' : 'خاموش'}</div></div>
+      <div class="li" id="mInter"><span class="tg">👆</span>
+        <div class="tx">حالت تعامل · ${State.interact ? 'روشن' : 'خاموش'}</div></div>
+      <div class="li" id="mAuto"><span class="tg">🎬</span>
+        <div class="tx">مخفی خودکار اینترو · ${State.autoIntro ? 'روشن' : 'خاموش'}</div></div>
+      <div class="li" id="mForce"><span class="tg">⚡</span>
+        <div class="tx">مخفی کن همین حالا</div></div>
+      <div class="li" id="mAddSec"><span class="tg">➕</span>
+        <div class="tx">افزودن سکشن جدید</div></div>
+      <div class="li" id="mClearPos"><span class="tg">📐</span>
+        <div class="tx">پاک کردن جابجایی‌ها</div></div>
+      <div class="li" id="mClearEff"><span class="tg">🧹</span>
+        <div class="tx">پاک کردن افکت‌ها</div></div>
+      <div class="li" id="mSave"><span class="tg">💾</span>
+        <div class="tx">ذخیره پروژه (JSON)</div></div>
+      <div class="li" id="mLoad"><span class="tg">📥</span>
+        <div class="tx">بارگذاری پروژه</div></div>
+      <div class="li" id="mReset" style="border-color:rgba(255,73,108,.3)">
+        <span class="tg" style="color:var(--danger)">🗑</span>
+        <div class="tx" style="color:var(--danger)">شروع مجدد</div></div>`;
+    Utils.$('#mRunJs').onclick = async () => {
+      State.runJs = !State.runJs;
+      Sheets.close();
+      UI.showL('بازسازی...', 20);
+      await Preview.rebuild();
+      UI.hideL();
+      UI.toast(State.runJs ? 'JS روشن' : 'JS خاموش');
+    };
+    Utils.$('#mInter').onclick = () => { Sheets.close(); Interact.set(!State.interact); };
+    Utils.$('#mAuto').onclick = () => {
+      State.autoIntro = !State.autoIntro;
+      Sheets.close();
+      UI.toast(State.autoIntro ? 'خودکار روشن' : 'خودکار خاموش');
+    };
+    Utils.$('#mForce').onclick = () => {
+      Sheets.close();
+      const n = Intro.run();
+      UI.toast(n > 0 ? `🎬 ${n} لایه` : 'چیزی نبود');
+    };
+    Utils.$('#mAddSec').onclick = () => { Sheets.close(); Sections.open(); };
+    Utils.$('#mClearPos').onclick = () => {
+      Sheets.close();
+      const n = State.P().edits.positions.size;
+      State.P().edits.positions.clear();
+      if(State.iframeDoc){
+        State.iframeDoc.querySelectorAll('[data-eid]').forEach(el => {
+          if(el.style.transform?.includes('translate')) el.style.transform = '';
+        });
+      }
+      History.commitNow();
+      UI.toast(`📐 ${n} پاک شد`);
+    };
+    Utils.$('#mClearEff').onclick = () => {
+      Sheets.close();
+      const nb = State.P().edits.backgrounds.size;
+      const ng = State.P().edits.glows.size;
+      const np = State.P().edits.parallax.size;
+      State.P().edits.backgrounds.clear();
+      State.P().edits.glows.clear();
+      State.P().edits.parallax.clear();
+      if(State.iframeDoc){
+        State.iframeDoc.querySelectorAll('.__sp_bgvid__').forEach(v => v.remove());
+        State.iframeDoc.querySelectorAll('[data-eid]').forEach(el => {
+          el.style.backgroundImage = '';
+          el.style.backgroundColor = '';
+          el.style.boxShadow = '';
+          el.removeAttribute('data-parallax');
+        });
+      }
+      History.commitNow();
+      UI.toast(`🧹 ${nb+ng+np} پاک شد`);
+    };
+    Utils.$('#mSave').onclick = () => { Sheets.close(); Export.saveProject(); };
+    Utils.$('#mLoad').onclick = () => { Sheets.close(); Utils.$('#jsonInput').value = ''; Utils.$('#jsonInput').click(); };
+    Utils.$('#mReset').onclick = () => {
+      if(!confirm('همه چیز پاک شه؟')) return;
+      Sheets.close();
+      Reset.all();
+    };
+    Sheets.open('menuSh');
+  }
+};
+
+/* ============================================================
+   ۲۶. Reset
+============================================================ */
+const Reset = {
+  all(){
+    Preview.revoke();
+    State.pages = [State.newPage('خانه')];
+    State.idx = 0;
+    State.iframeDoc = null;
+    State.texts = []; State.images = []; State.colors = []; State.elements = [];
+    State.sel = { kind:null, id:null };
+    State.big = false; State.drag = false; State.interact = false;
+    Utils.$('#btnDrag').classList.remove('on');
+    Utils.$('#btnInteract').classList.remove('on');
+    Utils.$('#mpill').classList.remove('on');
+    try { Utils.$('#pv').src = 'about:blank'; } catch {}
+    Utils.$('#bigMode').classList.remove('show');
+    History.clear();
+    Pages.renderBar();
+    UI.updateUI();
+    UI.toast('پاک شد');
+  }
+};
+
+/* ============================================================
+   ۲۷. Wire
+============================================================ */
+function wire(){
+  Utils.$('#btnImport').onclick = () => { Utils.$('#fileInput').value=''; Utils.$('#fileInput').click(); };
+  Utils.$('#btnEmptyImport').onclick = () => { Utils.$('#fileInput').value=''; Utils.$('#fileInput').click(); };
+  Utils.$('#fileInput').onchange = async e => {
+    const f = [...(e.target.files||[])];
+    if(f.length) await FileIO.addFiles(f);
+  };
+  Utils.$('#jsonInput').onchange = async e => {
+    const f = e.target.files?.[0];
+    if(f) await FileIO.loadProject(f);
+    e.target.value = '';
+  };
+
+  Utils.$('#btnUndo').onclick = () => History.undo();
+  Utils.$('#btnRedo').onclick = () => History.redo();
+  Utils.$('#btnDrag').onclick = () => {
+    if(State.interact){ UI.toast('⚠️ اول تعامل رو خاموش کن'); return; }
+    State.drag = !State.drag;
+    Utils.$('#btnDrag').classList.toggle('on', State.drag);
+    if(State.iframeDoc) State.iframeDoc.body.classList.toggle('sp-drag-mode', State.drag);
+    UI.toast(State.drag ? '✋ درگ روشن' : '✋ درگ خاموش');
+  };
+  Utils.$('#btnInteract').onclick = () => Interact.set(!State.interact);
+  Utils.$('#btnIntro').onclick = () => {
+    const n = Intro.run();
+    UI.toast(n > 0 ? `🎬 ${n} لایه` : 'چیزی نبود');
+  };
+  Utils.$('#btnTheme').onclick = () => {
+    const r = document.documentElement;
+    r.dataset.theme = r.dataset.theme === 'light' ? '' : 'light';
+  };
+  Utils.$('#btnAddSection').onclick = () => Sections.open();
+  Utils.$('#btnExport').onclick = () => Lists.open('export');
+  Utils.$('#btnMenu').onclick = () => Menu.open();
+  Utils.$('#closeEditor').onclick = () => Utils.$('#editor').classList.remove('open');
+
+  Utils.$('#bigTxt').onclick = async () => { UI.showL('استخراج...',10); await Extractor.txtStr(); UI.hideL(); Lists.open('texts'); };
+  Utils.$('#bigCol').onclick = async () => { UI.showL('رنگ‌ها...',10); await Extractor.colStr(); UI.hideL(); Lists.open('colors'); };
+  Utils.$('#bigImg').onclick = async () => { UI.showL('تصاویر...',10); await Extractor.imgStr(); UI.hideL(); Lists.open('images'); };
+  Utils.$('#bigForce').onclick = async () => {
+    if(!confirm('ممکنه هنگ کنه')) return;
+    State.big = false;
+    Utils.$('#bigMode').classList.remove('show');
+    UI.showL('رندر...',20);
+    await Preview.rebuild();
+    UI.hideL();
+  };
+
+  Utils.$$('.etab').forEach(t => t.onclick = () => {
+    Utils.$$('.etab').forEach(x => x.classList.remove('on'));
+    Utils.$$('.ep').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    const k = t.dataset.etab;
+    Utils.$('#ep' + k[0].toUpperCase() + k.slice(1)).classList.add('on');
+  });
+
+  Utils.$$('.lb .sb').forEach(b => b.onclick = () => {
+    Utils.$$('.lb .sb').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    const t = b.dataset.tool;
+    if(t === 'select'){ UI.toast('حالت انتخاب'); return; }
+    if(t === 'export'){ Lists.open('export'); return; }
+    if(t === 'sections'){ Sections.open(); return; }
+    Lists.open(t);
+  });
+
+  Utils.$$('.tbar button').forEach(b => b.onclick = () => {
+    Utils.$$('.tbar button').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    const t = b.dataset.tab;
+    if(t === 'editor'){ Utils.$('#editor').classList.add('open'); return; }
+    if(t === 'export'){ Lists.open('export'); return; }
+    if(t === 'sections'){ Sections.open(); return; }
+    Lists.open(t);
+  });
+
+  Utils.$('#sectionFileInput').onchange = async e => {
+    const files = [...(e.target.files || [])];
+    if(files.length) await Sections.addFromFiles(files);
+    e.target.value = '';
+  };
+  Utils.$('#sectionFolderInput').onchange = async e => {
+    const files = [...(e.target.files || [])];
+    if(files.length) await Sections.addFromFolder(files);
+    e.target.value = '';
+  };
+  Utils.$('#sectionJsonInput').onchange = async e => {
+    const f = e.target.files?.[0];
+    if(f) await Sections.importJSON(f);
+    e.target.value = '';
+  };
+  Utils.$('#secEditSave').onclick = () => Sections.saveEdit();
+  Utils.$('#secEditCancel').onclick = () => {
+    Sections.editingId = null;
+    Sheets.close();
+  };
+  Utils.$('#secEditClose').onclick = () => {
+    Sections.editingId = null;
+    Sheets.close();
+  };
+
+  Utils.$('#bd').onclick = () => Sheets.close();
+  Utils.$$('.xb').forEach(b => b.onclick = () => Sheets.close());
+
+  Utils.$$('.sh').forEach(sh => {
+    const h = sh.querySelector('.shh');
+    if(!h) return;
+    let y0 = 0, dr = false;
+    h.addEventListener('touchstart', e => {
+      y0 = e.touches[0].clientY;
+      dr = true;
+      sh.style.transition = 'none';
+    }, { passive:true });
+    h.addEventListener('touchmove', e => {
+      if(!dr) return;
+      const dy = Math.max(0, e.touches[0].clientY - y0);
+      sh.style.transform = `translateY(${dy}px)`;
+    }, { passive:true });
+    h.addEventListener('touchend', e => {
+      if(!dr) return;
+      dr = false;
+      const dy = e.changedTouches[0].clientY - y0;
+      sh.style.transition = '';
+      sh.style.transform = '';
+      if(dy > 80) Sheets.close();
+    });
+  });
+
+  document.addEventListener('keydown', e => {
+    const mod = e.ctrlKey || e.metaKey;
+    const k = e.key.toLowerCase();
+    if(mod && k === 'z' && !e.shiftKey){
+      e.preventDefault();
+      History.undo();
+      return;
+    }
+    if(mod && ((k === 'z' && e.shiftKey) || k === 'y')){
+      e.preventDefault();
+      History.redo();
+      return;
+    }
+    if(e.key === 'Escape'){
+      if(State.interact) Interact.set(false);
+      else if(State.drag){
+        State.drag = false;
+        Utils.$('#btnDrag').classList.remove('on');
+        if(State.iframeDoc) State.iframeDoc.body.classList.remove('sp-drag-mode');
+      }
+    }
+  }, true);
+}
+
+/* ============================================================
+   Init
+============================================================ */
+window.addEventListener('load', () => {
+  if(!window.JSZip){
+    State.jszip = false;
+    console.warn('JSZip نیامد — miniZip فعال');
+  }
+});
+
+Sections.init();
+wire();
+UI.updateUI();
+Pages.renderBar();
+History.updateBtns();
+
+})();
+</script>
+</body>
+</html>
